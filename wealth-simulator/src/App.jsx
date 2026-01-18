@@ -117,6 +117,7 @@ const KPICard = ({ title, value, subtext, icon: Icon, colorClass }) => (
 // Simplified Header for Accordions
 const SectionHeader = ({ icon: Icon, title, colorClass = "bg-indigo-500" }) => (
   <div className="flex items-center gap-2">
+    <span className={`w-1.5 h-1.5 rounded-full ${colorClass}`}></span>
     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
       {Icon && <Icon size={12} />} {title}
     </span>
@@ -127,41 +128,62 @@ const SectionHeader = ({ icon: Icon, title, colorClass = "bg-indigo-500" }) => (
  * MAIN APP
  */
 
+// Default parameters definition for fallback and type safety
+const DEFAULT_PARAMS = {
+  // Timeline
+  currentAge: 35,
+  retirementAge: 65,
+  lifeExpectancy: 90,
+
+  // Portfolio Splits
+  taxableBalance: 50000,
+  taxableContribution: 5000,
+
+  preTaxBalance: 40000, // 401k
+  preTaxContribution: 10000,
+
+  rothBalance: 10000,
+  rothContribution: 6000,
+
+  // Spending (Dynamic)
+  minSpending: 40000,          // Non-negotiable
+  discretionarySpending: 20000, // Travels, etc.
+  spendingCutFlexibility: 50,   // % of discretionary that can be cut
+
+  // Fixed Income (New)
+  fixedIncomeAnnual: 0,        // Pension, CPP, OAS, etc.
+  fixedIncomeStartAge: 65,     // Age it begins
+
+  // Market
+  expectedReturn: 4.5, // Changed default to reflect Real Return
+  volatility: 15.0,
+  // Inflation removed from state
+
+  // Taxes
+  incomeTaxRate: 30,
+  capitalGainsInclusion: 50,
+};
+
 export default function App() {
   // --- STATE ---
-  const [params, setParams] = useState({
-    // Timeline
-    currentAge: 35,
-    retirementAge: 65,
-    lifeExpectancy: 90,
+  const [params, setParams] = useState(() => {
+    // Initialize state from URL query parameters if they exist
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const initialParams = { ...DEFAULT_PARAMS };
 
-    // Portfolio Splits
-    taxableBalance: 50000,
-    taxableContribution: 5000,
+      let hasUrlParams = false;
+      Object.keys(DEFAULT_PARAMS).forEach(key => {
+        const val = searchParams.get(key);
+        if (val !== null) {
+          initialParams[key] = parseFloat(val);
+          hasUrlParams = true;
+        }
+      });
 
-    preTaxBalance: 40000, // 401k
-    preTaxContribution: 10000,
-
-    rothBalance: 10000,
-    rothContribution: 6000,
-
-    // Spending (Dynamic)
-    minSpending: 40000,          // Non-negotiable
-    discretionarySpending: 20000, // Travels, etc.
-    spendingCutFlexibility: 50,   // % of discretionary that can be cut
-
-    // Fixed Income (New)
-    fixedIncomeAnnual: 0,        // Pension, CPP, OAS, etc.
-    fixedIncomeStartAge: 65,     // Age it begins
-
-    // Market
-    expectedReturn: 4.5, // Changed default to reflect Real Return
-    volatility: 15.0,
-    // Inflation removed from state
-
-    // Taxes
-    incomeTaxRate: 30,
-    capitalGainsInclusion: 50,
+      return initialParams;
+    }
+    return DEFAULT_PARAMS;
   });
 
   const [results, setResults] = useState(null);
@@ -174,6 +196,20 @@ export default function App() {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [activeTab, setActiveTab] = useState('taxable'); // 'taxable', 'pretax', 'roth'
+
+  // --- URL SYNC ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        searchParams.set(key, value);
+      });
+
+      // Update URL without reloading page
+      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [params]);
 
   // --- LOGIC ---
 
