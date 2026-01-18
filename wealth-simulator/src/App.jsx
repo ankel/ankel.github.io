@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, AreaChart, Area, BarChart, Bar, Legend, ComposedChart } from 'recharts';
-import { Settings, Info, TrendingUp, AlertTriangle, CheckCircle, RefreshCw, ChevronDown, ChevronUp, Wallet, PieChart, ShieldCheck, Clock, ShoppingBag, Landmark, Layers } from 'lucide-react';
+import { Settings, Info, TrendingUp, AlertTriangle, CheckCircle, RefreshCw, ChevronDown, ChevronUp, Wallet, PieChart, ShieldCheck, Clock, ShoppingBag, Landmark, Layers, Table as TableIcon } from 'lucide-react';
 
 /**
  * UTILITIES
@@ -25,6 +25,15 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
+// Currency formatter (No Compact Notation)
+const formatFullCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
 // Axis formatter for millions
 const formatAxis = (value) => {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}m`;
@@ -32,7 +41,7 @@ const formatAxis = (value) => {
 };
 
 // Percentage formatter
-const formatPercent = (value) => `${value}%`;
+const formatPercent = (value) => `${value.toFixed(1)}%`;
 
 /**
  * COMPONENTS
@@ -136,14 +145,14 @@ const DEFAULT_PARAMS = {
   lifeExpectancy: 90,
 
   // Portfolio Splits
-  taxableBalance: 50000,
-  taxableContribution: 5000,
+  taxableBalance: 300000,
+  taxableContribution: 50000,
 
-  preTaxBalance: 40000, // 401k
-  preTaxContribution: 10000,
+  preTaxBalance: 200000, // 401k
+  preTaxContribution: 20000,
 
-  rothBalance: 10000,
-  rothContribution: 6000,
+  rothBalance: 100000,
+  rothContribution: 7000,
 
   // Spending (Dynamic)
   minSpending: 40000,          // Non-negotiable
@@ -193,13 +202,22 @@ export default function App() {
   const [showTimeline, setShowTimeline] = useState(true);
   const [showPortfolio, setShowPortfolio] = useState(true);
   const [showSpending, setShowSpending] = useState(true);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true); // Expanded by default
+  const [showTable, setShowTable] = useState(false); // Table collapsed by default
 
   const [activeTab, setActiveTab] = useState('taxable'); // 'taxable', 'pretax', 'roth'
 
   // --- URL SYNC ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Check if current params are identical to default params
+      const isDefault = Object.keys(DEFAULT_PARAMS).every(
+        (key) => params[key] === DEFAULT_PARAMS[key]
+      );
+
+      // If they are default, do not trigger a URL update
+      if (isDefault) return;
+
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         searchParams.set(key, value);
@@ -230,6 +248,7 @@ export default function App() {
         const runPreTax = [];
         const runRoth = [];
         const runTotal = [];
+        const runSpending = [];
 
         // Initialize Balances
         let bTaxable = params.taxableBalance;
@@ -256,6 +275,8 @@ export default function App() {
           }
 
           // 3. Cashflows
+          let actualSpendingForYear = 0;
+
           if (year > 0) {
             if (!isRetired) {
               // --- ACCUMULATION ---
@@ -279,6 +300,7 @@ export default function App() {
               const portfolioNeed = baseTarget - currentFixedIncome;
 
               let actualPortfolioWithdrawal = portfolioNeed;
+              actualSpendingForYear = baseTarget; // Assume full spending initially
 
               // Check if "Bad Year" ONLY if we actually need to withdraw from portfolio
               if (portfolioNeed > 0) {
@@ -293,6 +315,7 @@ export default function App() {
                     const actualCut = Math.min(shortfall, maxCutAmount);
 
                     actualPortfolioWithdrawal = portfolioNeed - actualCut;
+                    actualSpendingForYear = baseTarget - actualCut; // Adjust actual spending record
                  }
               }
 
@@ -364,12 +387,14 @@ export default function App() {
           runPreTax.push(bPreTax);
           runRoth.push(bRoth);
           runTotal.push(bTaxable + bPreTax + bRoth);
+          runSpending.push(actualSpendingForYear); // Store for history
         }
         allRuns.push({
           taxable: runTaxable,
           pretax: runPreTax,
           roth: runRoth,
-          total: runTotal
+          total: runTotal,
+          spending: runSpending
         });
       }
 
@@ -408,7 +433,54 @@ export default function App() {
          });
       }
 
-      // --- 3. Success Criteria & KPIs ---
+      // --- 3. Build Detailed Table Data ---
+      const tableData = [];
+
+      for (let i = 1; i < medianData.length; i++) {
+         const current = medianData[i];
+         const prev = medianData[i-1];
+         const startBalance = prev.total;
+         const endBalance = current.total;
+         const age = current.age;
+
+         const isRetired = age > params.retirementAge;
+
+         // Use recorded spending from the median run
+         const recordedSpending = medianRun.spending[i];
+
+         // Calculate fixed income
+         const fixedIncome = (isRetired && age >= params.fixedIncomeStartAge) ? params.fixedIncomeAnnual : 0;
+
+         // Calculate Net Cashflow relative to portfolio
+         let portfolioCashflow = 0;
+         if (!isRetired) {
+             portfolioCashflow = params.taxableContribution + params.preTaxContribution + params.rothContribution;
+         } else {
+             // Net withdrawal = Spending - Fixed Income
+             // If fixed income > spending, it's a surplus (positive cashflow)
+             portfolioCashflow = -(recordedSpending - fixedIncome);
+         }
+
+         // Derived Growth
+         // End = Start + Growth + Cashflow
+         // Growth = End - Start - Cashflow
+         const growth = endBalance - startBalance - portfolioCashflow;
+         // Return % = Growth / Start
+         const returnPct = startBalance > 0 ? (growth / startBalance) * 100 : 0;
+
+         tableData.push({
+            age,
+            startBalance,
+            endBalance,
+            change: endBalance - startBalance,
+            returnPct,
+            spendingNeed: recordedSpending,
+            fixedIncome,
+            isRetired
+         });
+      }
+
+      // --- 4. Success Criteria & KPIs ---
       // We calculate success rate based on the P20 line staying above 0 (or original principal if requested, but logic below uses > startTotalNetWorth for success rate, and p20 for survival age)
 
       const successCount = allRuns.filter(run => run.total[run.total.length - 1] >= startTotalNetWorth).length;
@@ -426,6 +498,7 @@ export default function App() {
       setResults({
         probabilityData,
         medianData,
+        tableData,
         successRate,
         medianEndWealth: probabilityData[probabilityData.length - 1].p50,
         survivalAge
@@ -809,9 +882,9 @@ export default function App() {
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
                       <ReferenceArea x1={params.retirementAge} x2={params.retirementAge + 0.5} stroke="none" fill="#6366f1" fillOpacity={0.2} />
-                      <Area type="monotone" dataKey="p80" stroke="#34d399" fill="url(#colorP90)" strokeWidth={1} strokeDasharray="4 4" name="Optimistic (80th)"/>
                       <Area type="monotone" dataKey="p20" stroke="#f87171" fill="url(#colorP10)" strokeWidth={1} strokeDasharray="4 4" name="Pessimistic (20th)"/>
                       <Area type="monotone" dataKey="p50" stroke="#4f46e5" fill="none" strokeWidth={3} name="Median"/>
+                      <Area type="monotone" dataKey="p80" stroke="#34d399" fill="url(#colorP90)" strokeWidth={1} strokeDasharray="4 4" name="Optimistic (80th)"/>
                     </AreaChart>
                   </ResponsiveContainer>
                )}
@@ -820,7 +893,7 @@ export default function App() {
 
           {/* Chart 2: Median Breakdown */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col h-[400px]">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                    <Layers size={20} className="text-indigo-600" />
@@ -830,14 +903,14 @@ export default function App() {
                   Account breakdown in the Median (50th percentile) scenario
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-xs font-medium">
-                  <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
                       <span className="w-3 h-3 rounded-sm bg-indigo-500"></span> Taxable
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
                       <span className="w-3 h-3 rounded-sm bg-emerald-500"></span> Pre-Tax
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
                       <span className="w-3 h-3 rounded-sm bg-orange-400"></span> Post-Tax
                   </div>
               </div>
@@ -873,6 +946,57 @@ export default function App() {
                   </ResponsiveContainer>
                )}
             </div>
+          </div>
+
+          {/* New Section: Detailed Table */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
+             <div
+               className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+               onClick={() => setShowTable(!showTable)}
+             >
+                <div className="flex items-center gap-2">
+                   <TableIcon size={20} className="text-indigo-600" />
+                   <h2 className="text-lg font-bold text-slate-800">Yearly Breakdown (Median Case)</h2>
+                </div>
+                {showTable ? <ChevronUp size={20} className="text-slate-400"/> : <ChevronDown size={20} className="text-slate-400"/>}
+             </div>
+
+             {showTable && results && (
+               <div className="overflow-x-auto rounded-b-2xl">
+                 <table className="w-full text-sm text-left text-slate-600">
+                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 z-10 shadow-sm">
+                        <tr>
+                            <th className="px-6 py-3 bg-slate-50">Age</th>
+                            <th className="px-6 py-3 bg-slate-50">Portfolio (End)</th>
+                            <th className="px-6 py-3 bg-slate-50">Change</th>
+                            <th className="px-6 py-3 bg-slate-50">Market Return</th>
+                            <th className="px-6 py-3 text-right bg-slate-50">Actual Spend</th>
+                            <th className="px-6 py-3 text-right bg-slate-50">Fixed Income</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {results.tableData.map((row) => (
+                            <tr key={row.age} className={`border-b border-slate-100 hover:bg-slate-50 ${row.isRetired ? 'bg-indigo-50/30' : ''}`}>
+                                <td className="px-6 py-3 font-medium text-slate-900">{row.age}</td>
+                                <td className="px-6 py-3 font-bold text-slate-700">{formatFullCurrency(row.endBalance)}</td>
+                                <td className={`px-6 py-3 ${row.change >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    {row.change >= 0 ? '+' : ''}{formatCurrency(row.change)}
+                                </td>
+                                <td className={`px-6 py-3 font-mono ${row.returnPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    {row.returnPct.toFixed(1)}%
+                                </td>
+                                <td className="px-6 py-3 text-right text-slate-500">
+                                    {row.isRetired ? formatCurrency(row.spendingNeed) : '-'}
+                                </td>
+                                <td className="px-6 py-3 text-right text-slate-500">
+                                    {row.fixedIncome > 0 ? formatCurrency(row.fixedIncome) : '-'}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                 </table>
+               </div>
+             )}
           </div>
 
         </div>
