@@ -1,3 +1,14 @@
+# Wealth simulator
+
+This site run a Monte Carlo (1000 iterations) to simulate future networth based on provided user inputs.
+
+## Deploy
+
+Use `npm run deploy` to deploy to github page on the `gh-pages` branch. 
+
+[!NOTE]
+The deployment is handled by `gh-pages` node module. Not sure how I feel about that... I should write my own stuff.
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
