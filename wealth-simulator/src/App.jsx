@@ -45,19 +45,19 @@ const InputGroup = ({ label, value, onChange, min, max, step, unit = '', tooltip
   const handleChange = (e) => {
     // Remove commas for processing
     const rawValue = e.target.value.replace(/,/g, '');
-    
+
     // Handle empty or invalid input gracefully
     if (rawValue === '' || rawValue === '-') {
        onChange(0);
        return;
     }
-    
+
     const parsed = Number(rawValue);
     if (!isNaN(parsed)) {
       onChange(parsed);
     }
   };
-  
+
   return (
     <div className="mb-2 flex items-center justify-between">
       <label className="text-xs font-medium text-slate-700 flex items-center gap-1 shrink-0 mr-2">
@@ -88,8 +88,8 @@ const InputGroup = ({ label, value, onChange, min, max, step, unit = '', tooltip
           onBlur={() => setIsFocused(false)}
           onChange={handleChange}
           className={`block w-full rounded-md border border-slate-300 py-1 focus:border-indigo-500 focus:ring-indigo-500 text-xs bg-white text-slate-900 shadow-sm transition-colors text-right font-medium
-            ${isCurrency ? 'pl-5' : 'pl-2'} 
-            ${!isCurrency && unit ? 'pr-7' : 'pr-2'}`} 
+            ${isCurrency ? 'pl-5' : 'pl-2'}
+            ${!isCurrency && unit ? 'pr-7' : 'pr-2'}`}
         />
         {!isCurrency && unit && (
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -117,7 +117,6 @@ const KPICard = ({ title, value, subtext, icon: Icon, colorClass }) => (
 // Simplified Header for Accordions
 const SectionHeader = ({ icon: Icon, title, colorClass = "bg-indigo-500" }) => (
   <div className="flex items-center gap-2">
-    <span className={`w-1.5 h-1.5 rounded-full ${colorClass}`}></span> 
     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
       {Icon && <Icon size={12} />} {title}
     </span>
@@ -139,7 +138,7 @@ export default function App() {
     // Portfolio Splits
     taxableBalance: 50000,
     taxableContribution: 5000,
-    
+
     preTaxBalance: 40000, // 401k
     preTaxContribution: 10000,
 
@@ -156,9 +155,9 @@ export default function App() {
     fixedIncomeStartAge: 65,     // Age it begins
 
     // Market
-    expectedReturn: 7.0,
+    expectedReturn: 4.5, // Changed default to reflect Real Return
     volatility: 15.0,
-    inflation: 2.5,
+    // Inflation removed from state
 
     // Taxes
     incomeTaxRate: 30,
@@ -167,23 +166,23 @@ export default function App() {
 
   const [results, setResults] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  
+
   // Accordion States
   const [showTimeline, setShowTimeline] = useState(true);
   const [showPortfolio, setShowPortfolio] = useState(true);
   const [showSpending, setShowSpending] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState('taxable'); // 'taxable', 'pretax', 'roth'
 
   // --- LOGIC ---
 
   const runSimulation = useCallback(() => {
     setIsSimulating(true);
-    
+
     setTimeout(() => {
       const SIMULATIONS = 1000;
-      
+
       const yearsToSimulate = params.lifeExpectancy - params.currentAge;
       // Store full breakdown for every run: [{ taxable: [], pretax: [], roth: [], total: [] }]
       const allRuns = [];
@@ -195,12 +194,12 @@ export default function App() {
         const runPreTax = [];
         const runRoth = [];
         const runTotal = [];
-        
+
         // Initialize Balances
         let bTaxable = params.taxableBalance;
         let bPreTax = params.preTaxBalance;
         let bRoth = params.rothBalance;
-        
+
         for (let year = 0; year <= yearsToSimulate; year++) {
           const age = params.currentAge + year;
           const isRetired = age >= params.retirementAge;
@@ -208,12 +207,10 @@ export default function App() {
           // Snapshot previous balance (for Dynamic Spending logic)
           const startTotal = bTaxable + bPreTax + bRoth;
 
-          // 1. Calculate Real Return
-          const nominalReturnMean = params.expectedReturn / 100;
-          const inflationRate = params.inflation / 100;
+          // 1. Calculate Real Return (Simplified: Input IS Real Return)
+          const meanRealReturn = params.expectedReturn / 100;
           const vol = params.volatility / 100;
-          const randomNominalReturn = generateGaussian(nominalReturnMean, vol);
-          const realReturn = (1 + randomNominalReturn) / (1 + inflationRate) - 1;
+          const realReturn = generateGaussian(meanRealReturn, vol);
 
           // 2. Apply Growth (Simultaneous to all accounts)
           if (year > 0) {
@@ -232,16 +229,16 @@ export default function App() {
 
             } else {
               // --- DECUMULATION (Dynamic Spending Logic) ---
-              
+
               const currentTotal = bTaxable + bPreTax + bRoth;
               const gain = currentTotal - startTotal; // Real Dollar Gain
-              
+
               // Base Requirements
               const baseTarget = params.minSpending + params.discretionarySpending;
-              
+
               // Fixed Income Logic
               const currentFixedIncome = (age >= params.fixedIncomeStartAge) ? params.fixedIncomeAnnual : 0;
-              
+
               // The amount we MUST cover from portfolio (can be negative if pension > spending)
               const portfolioNeed = baseTarget - currentFixedIncome;
 
@@ -252,19 +249,19 @@ export default function App() {
                  if (gain < portfolioNeed) {
                     // We rely on portfolio, but it didn't grow enough.
                     // Calculate shortfall relative to the portfolio need
-                    const shortfall = portfolioNeed - gain; 
-                    
+                    const shortfall = portfolioNeed - gain;
+
                     const maxCutAmount = params.discretionarySpending * (params.spendingCutFlexibility / 100);
-                    
+
                     // We can only cut discretionary spending, even if pension covers essentials
                     const actualCut = Math.min(shortfall, maxCutAmount);
-                    
+
                     actualPortfolioWithdrawal = portfolioNeed - actualCut;
                  }
               }
 
               // --- EXECUTE CASH FLOW ---
-              
+
               if (actualPortfolioWithdrawal < 0) {
                  // SURPLUS: Pension > Spending. Reinvest surplus into Taxable Account.
                  bTaxable += Math.abs(actualPortfolioWithdrawal);
@@ -359,9 +356,9 @@ export default function App() {
          const lastB = b.total[b.total.length - 1];
          return lastA - lastB;
       });
-      
+
       const medianRunIndex = Math.floor(SIMULATIONS * 0.5);
-      const medianRun = allRuns[medianRunIndex]; 
+      const medianRun = allRuns[medianRunIndex];
 
       // Build Stacked Data from Median Run
       const medianData = [];
@@ -377,7 +374,7 @@ export default function App() {
 
       // --- 3. Success Criteria & KPIs ---
       // We calculate success rate based on the P20 line staying above 0 (or original principal if requested, but logic below uses > startTotalNetWorth for success rate, and p20 for survival age)
-      
+
       const successCount = allRuns.filter(run => run.total[run.total.length - 1] >= startTotalNetWorth).length;
       const successRate = (successCount / SIMULATIONS) * 100;
 
@@ -415,7 +412,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
-      
+
       {/* SIDEBAR - INPUTS */}
       <div className="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-lg z-10">
         <div className="p-6 border-b border-slate-100 bg-indigo-600 text-white">
@@ -425,12 +422,12 @@ export default function App() {
           </h1>
           <p className="text-indigo-100 text-xs mt-1">Multi-Account Monte Carlo (Real $)</p>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-          
+
           {/* Timeline Section */}
           <section className="mb-6 border-b border-slate-100 pb-2">
-            <div 
+            <div
                className="flex items-center justify-between cursor-pointer mb-3 group"
                onClick={() => setShowTimeline(!showTimeline)}
              >
@@ -440,23 +437,23 @@ export default function App() {
 
             {showTimeline ? (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                    <InputGroup 
-                    label="Current Age" 
-                    value={params.currentAge} 
+                    <InputGroup
+                    label="Current Age"
+                    value={params.currentAge}
                     min={18} max={90} step={1} unit=" yrs"
-                    onChange={(v) => updateParam('currentAge', v)} 
+                    onChange={(v) => updateParam('currentAge', v)}
                     />
-                    <InputGroup 
-                    label="Retirement Age" 
-                    value={params.retirementAge} 
+                    <InputGroup
+                    label="Retirement Age"
+                    value={params.retirementAge}
                     min={params.currentAge + 1} max={100} step={1} unit=" yrs"
-                    onChange={(v) => updateParam('retirementAge', v)} 
+                    onChange={(v) => updateParam('retirementAge', v)}
                     />
-                    <InputGroup 
-                    label="Life Expectancy" 
-                    value={params.lifeExpectancy} 
+                    <InputGroup
+                    label="Life Expectancy"
+                    value={params.lifeExpectancy}
                     min={params.retirementAge + 1} max={110} step={1} unit=" yrs"
-                    onChange={(v) => updateParam('lifeExpectancy', v)} 
+                    onChange={(v) => updateParam('lifeExpectancy', v)}
                     />
                 </div>
             ) : (
@@ -472,14 +469,14 @@ export default function App() {
 
           {/* Portfolio Section with Tabs */}
           <section className="mb-6 border-b border-slate-100 pb-2">
-             <div 
+             <div
                className="flex items-center justify-between cursor-pointer mb-3 group"
                onClick={() => setShowPortfolio(!showPortfolio)}
              >
                 <SectionHeader title="Portfolio Assets" colorClass="bg-emerald-500" icon={PieChart} />
                 {showPortfolio ? <ChevronUp size={16} className="text-slate-400"/> : <ChevronDown size={16} className="text-slate-400"/>}
              </div>
-            
+
             {showPortfolio ? (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Account Tabs */}
@@ -489,14 +486,14 @@ export default function App() {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`flex-1 text-xs font-semibold py-2 rounded-md transition-all ${
-                            activeTab === tab 
-                            ? 'bg-white text-indigo-600 shadow-sm' 
+                            activeTab === tab
+                            ? 'bg-white text-indigo-600 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                         }`}
                         >
                         {tab === 'taxable' && 'Taxable'}
-                        {tab === 'pretax' && '401k/IRA'}
-                        {tab === 'roth' && 'Roth'}
+                        {tab === 'pretax' && 'Pre-Tax'}
+                        {tab === 'roth' && 'Post-Tax'}
                         </button>
                     ))}
                     </div>
@@ -507,37 +504,37 @@ export default function App() {
                         <div className="text-xs text-slate-400 mb-3 flex gap-2 items-center">
                             <Wallet size={12} /> Taxed at Inc Rate × Inclusion
                         </div>
-                        <InputGroup 
-                            label="Current Balance" 
-                            value={params.taxableBalance} 
+                        <InputGroup
+                            label="Current Balance"
+                            value={params.taxableBalance}
                             min={0} max={2000000} step={1000} unit="$"
-                            onChange={(v) => updateParam('taxableBalance', v)} 
+                            onChange={(v) => updateParam('taxableBalance', v)}
                         />
-                        <InputGroup 
-                            label="Annual Contrib." 
-                            value={params.taxableContribution} 
+                        <InputGroup
+                            label="Annual Contrib."
+                            value={params.taxableContribution}
                             min={0} max={100000} step={500} unit="$"
-                            onChange={(v) => updateParam('taxableContribution', v)} 
+                            onChange={(v) => updateParam('taxableContribution', v)}
                         />
                         </div>
                     )}
-                    
+
                     {activeTab === 'pretax' && (
                         <div className="animate-in fade-in slide-in-from-left-1 duration-200">
                         <div className="text-xs text-slate-400 mb-3 flex gap-2 items-center">
-                            <ShieldCheck size={12} /> Taxed as Income
+                            <ShieldCheck size={12} /> Taxed as Income (401k, IRA...)
                         </div>
-                        <InputGroup 
-                            label="Current Balance" 
-                            value={params.preTaxBalance} 
+                        <InputGroup
+                            label="Current Balance"
+                            value={params.preTaxBalance}
                             min={0} max={2000000} step={1000} unit="$"
-                            onChange={(v) => updateParam('preTaxBalance', v)} 
+                            onChange={(v) => updateParam('preTaxBalance', v)}
                         />
-                        <InputGroup 
-                            label="Annual Contrib." 
-                            value={params.preTaxContribution} 
+                        <InputGroup
+                            label="Annual Contrib."
+                            value={params.preTaxContribution}
                             min={0} max={100000} step={500} unit="$"
-                            onChange={(v) => updateParam('preTaxContribution', v)} 
+                            onChange={(v) => updateParam('preTaxContribution', v)}
                         />
                         </div>
                     )}
@@ -545,19 +542,19 @@ export default function App() {
                     {activeTab === 'roth' && (
                         <div className="animate-in fade-in slide-in-from-left-1 duration-200">
                         <div className="text-xs text-slate-400 mb-3 flex gap-2 items-center">
-                            <CheckCircle size={12} /> Tax-Free
+                            <CheckCircle size={12} /> Tax-free (Roth IRA...)
                         </div>
-                        <InputGroup 
-                            label="Current Balance" 
-                            value={params.rothBalance} 
+                        <InputGroup
+                            label="Current Balance"
+                            value={params.rothBalance}
                             min={0} max={2000000} step={1000} unit="$"
-                            onChange={(v) => updateParam('rothBalance', v)} 
+                            onChange={(v) => updateParam('rothBalance', v)}
                         />
-                        <InputGroup 
-                            label="Annual Contrib." 
-                            value={params.rothContribution} 
+                        <InputGroup
+                            label="Annual Contrib."
+                            value={params.rothContribution}
                             min={0} max={100000} step={500} unit="$"
-                            onChange={(v) => updateParam('rothContribution', v)} 
+                            onChange={(v) => updateParam('rothContribution', v)}
                         />
                         </div>
                     )}
@@ -572,7 +569,7 @@ export default function App() {
 
           {/* Retirement Plan Section (Renamed) */}
            <section className="mb-6 border-b border-slate-100 pb-2">
-             <div 
+             <div
                className="flex items-center justify-between cursor-pointer mb-3 group"
                onClick={() => setShowSpending(!showSpending)}
              >
@@ -583,45 +580,45 @@ export default function App() {
              {showSpending ? (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                    <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Needs</h3>
-                   <InputGroup 
-                    label="Min Spending" 
+                   <InputGroup
+                    label="Min Spending"
                     tooltip="Non-negotiable annual base needs"
-                    value={params.minSpending} 
+                    value={params.minSpending}
                     min={20000} max={300000} step={1000} unit="$"
-                    onChange={(v) => updateParam('minSpending', v)} 
+                    onChange={(v) => updateParam('minSpending', v)}
                   />
-                  <InputGroup 
-                    label="Discretionary" 
+                  <InputGroup
+                    label="Discretionary"
                     tooltip="Travel, luxury, etc."
-                    value={params.discretionarySpending} 
+                    value={params.discretionarySpending}
                     min={0} max={200000} step={1000} unit="$"
-                    onChange={(v) => updateParam('discretionarySpending', v)} 
+                    onChange={(v) => updateParam('discretionarySpending', v)}
                   />
-                  <InputGroup 
-                    label="Flexibility" 
+                  <InputGroup
+                    label="Flexibility"
                     tooltip="Max % of Discretionary to cut in bad years"
-                    value={params.spendingCutFlexibility} 
+                    value={params.spendingCutFlexibility}
                     min={0} max={100} step={5} unit="%"
-                    onChange={(v) => updateParam('spendingCutFlexibility', v)} 
+                    onChange={(v) => updateParam('spendingCutFlexibility', v)}
                   />
 
                   <div className="h-px bg-slate-100 my-3"></div>
-                  
+
                   <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide flex items-center gap-1">
                       <Wallet size={12} /> Fixed Income
                   </h3>
-                  <InputGroup 
-                    label="Annual Amount" 
+                  <InputGroup
+                    label="Annual Amount"
                     tooltip="Pension, Annuity, Govt Income (Real $)"
-                    value={params.fixedIncomeAnnual} 
+                    value={params.fixedIncomeAnnual}
                     min={0} max={100000} step={1000} unit="$"
-                    onChange={(v) => updateParam('fixedIncomeAnnual', v)} 
+                    onChange={(v) => updateParam('fixedIncomeAnnual', v)}
                   />
-                   <InputGroup 
-                    label="Start Age" 
-                    value={params.fixedIncomeStartAge} 
+                   <InputGroup
+                    label="Start Age"
+                    value={params.fixedIncomeStartAge}
                     min={50} max={80} step={1} unit=" yrs"
-                    onChange={(v) => updateParam('fixedIncomeStartAge', v)} 
+                    onChange={(v) => updateParam('fixedIncomeStartAge', v)}
                   />
 
                   <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100 mt-2">
@@ -638,49 +635,44 @@ export default function App() {
 
           {/* Economics Section */}
           <section className="mb-6">
-             <div 
+             <div
                className="flex items-center justify-between cursor-pointer mb-3 group"
                onClick={() => setShowAdvanced(!showAdvanced)}
              >
                 <SectionHeader title="Market & Taxes" colorClass="bg-amber-500" icon={Settings} />
                 {showAdvanced ? <ChevronUp size={16} className="text-slate-400"/> : <ChevronDown size={16} className="text-slate-400"/>}
              </div>
-            
+
             {showAdvanced && (
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <InputGroup 
-                  label="Expected Return" 
-                  tooltip="Nominal annual return. The simulation uses (Return - Inflation) to calculate Real Return."
-                  value={params.expectedReturn} 
+                <InputGroup
+                  label="Expected Return"
+                  tooltip="Real annual return (after inflation) in real dollars."
+                  value={params.expectedReturn}
                   min={1} max={15} step={0.1} unit="%"
-                  onChange={(v) => updateParam('expectedReturn', v)} 
+                  onChange={(v) => updateParam('expectedReturn', v)}
                 />
-                <InputGroup 
-                  label="Volatility" 
+                <InputGroup
+                  label="Volatility"
                   tooltip="Standard Deviation. Higher volatility means wider swings in annual returns, increasing both the upside potential and downside risk."
-                  value={params.volatility} 
+                  value={params.volatility}
                   min={1} max={30} step={0.5} unit="%"
-                  onChange={(v) => updateParam('volatility', v)} 
+                  onChange={(v) => updateParam('volatility', v)}
                 />
-                <InputGroup 
-                  label="Inflation" 
-                  value={params.inflation} 
-                  min={0} max={10} step={0.1} unit="%"
-                  onChange={(v) => updateParam('inflation', v)} 
-                />
+                {/* Inflation Input Removed */}
                 <div className="h-px bg-slate-200 my-4"></div>
                 <h3 className="text-xs font-semibold text-slate-500 mb-3">Tax Rates</h3>
-                 <InputGroup 
-                  label="Income Tax Rate" 
-                  value={params.incomeTaxRate} 
+                 <InputGroup
+                  label="Income Tax Rate"
+                  value={params.incomeTaxRate}
                   min={0} max={60} step={1} unit="%"
-                  onChange={(v) => updateParam('incomeTaxRate', v)} 
+                  onChange={(v) => updateParam('incomeTaxRate', v)}
                 />
-                <InputGroup 
-                  label="Inclusion Rate" 
-                  value={params.capitalGainsInclusion} 
+                <InputGroup
+                  label="Inclusion Rate"
+                  value={params.capitalGainsInclusion}
                   min={0} max={100} step={1} unit="%"
-                  onChange={(v) => updateParam('capitalGainsInclusion', v)} 
+                  onChange={(v) => updateParam('capitalGainsInclusion', v)}
                 />
               </div>
             )}
@@ -695,26 +687,26 @@ export default function App() {
 
       {/* MAIN CONTENT - CHART & RESULTS */}
       <div className="flex-1 flex flex-col bg-slate-50 h-full overflow-hidden">
-        
+
         {/* KPI Header */}
         <div className="flex-none p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-100 bg-white">
-          <KPICard 
-            title="Success Probability" 
-            value={results ? `${results.successRate.toFixed(1)}%` : '-'} 
+          <KPICard
+            title="Success Probability"
+            value={results ? `${results.successRate.toFixed(1)}%` : '-'}
             subtext="Chance to preserve capital"
             icon={results?.successRate > 80 ? CheckCircle : AlertTriangle}
             colorClass={results?.successRate > 80 ? 'text-emerald-600 bg-emerald-500' : (results?.successRate > 50 ? 'text-amber-600 bg-amber-500' : 'text-red-600 bg-red-500')}
           />
-          <KPICard 
-            title="Median Legacy" 
-            value={results ? formatCurrency(results.medianEndWealth) : '-'} 
+          <KPICard
+            title="Median Legacy"
+            value={results ? formatCurrency(results.medianEndWealth) : '-'}
             subtext="Total wealth at life expectancy"
             icon={TrendingUp}
             colorClass="text-indigo-600 bg-indigo-500"
           />
-          <KPICard 
-            title="Safe Until Age" 
-            value={results ? results.survivalAge : '-'} 
+          <KPICard
+            title="Safe Until Age"
+            value={results ? results.survivalAge : '-'}
             subtext="In worst 20% of cases"
             icon={ShieldCheck}
             colorClass="text-blue-600 bg-blue-500"
@@ -723,10 +715,10 @@ export default function App() {
 
         {/* Scrollable Charts Container */}
         <div className="flex-1 overflow-y-auto bg-slate-50 p-6 md:p-8 space-y-6">
-          
+
           {/* Chart 1: Total Wealth Probability */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col h-[400px]">
-             <div className="flex justify-between items-center mb-6">
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                    <TrendingUp size={20} className="text-indigo-600" />
@@ -736,19 +728,19 @@ export default function App() {
                   Range of outcomes (Real $)
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-xs font-medium">
-                 <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-400"></span> 80th %
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium">
+                 <div className="flex items-center gap-1 whitespace-nowrap">
+                    <span className="w-3 h-3 rounded-full bg-red-100 border border-red-400"></span> 20th %
                  </div>
-                 <div className="flex items-center gap-1">
+                 <div className="flex items-center gap-1 whitespace-nowrap">
                     <span className="w-3 h-3 rounded-full bg-indigo-500"></span> Median
                  </div>
-                 <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full bg-red-100 border border-red-400"></span> 20th %
+                 <div className="flex items-center gap-1 whitespace-nowrap">
+                    <span className="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-400"></span> 80th %
                  </div>
               </div>
             </div>
-            
+
             <div className="flex-1 w-full min-h-0">
                {results && (
                   <ResponsiveContainer width="100%" height="100%">
@@ -764,18 +756,18 @@ export default function App() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="age" 
-                        stroke="#94a3b8" 
+                      <XAxis
+                        dataKey="age"
+                        stroke="#94a3b8"
                         tick={{fontSize: 12}}
-                        label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }} 
+                        label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                       />
-                      <YAxis 
-                        stroke="#94a3b8" 
+                      <YAxis
+                        stroke="#94a3b8"
                         tick={{fontSize: 12}}
                         tickFormatter={formatAxis}
                       />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => formatCurrency(value)}
                         labelFormatter={(label) => `Age ${label}`}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -804,43 +796,43 @@ export default function App() {
               </div>
               <div className="flex items-center gap-4 text-xs font-medium">
                   <div className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-sm bg-orange-400"></span> Roth
+                      <span className="w-3 h-3 rounded-sm bg-indigo-500"></span> Taxable
                   </div>
                   <div className="flex items-center gap-1">
                       <span className="w-3 h-3 rounded-sm bg-emerald-500"></span> Pre-Tax
                   </div>
                   <div className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-sm bg-indigo-500"></span> Taxable
+                      <span className="w-3 h-3 rounded-sm bg-orange-400"></span> Post-Tax
                   </div>
               </div>
             </div>
-            
+
             <div className="flex-1 w-full min-h-0">
                {results && (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={results.medianData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="age" 
-                        stroke="#94a3b8" 
+                      <XAxis
+                        dataKey="age"
+                        stroke="#94a3b8"
                         tick={{fontSize: 12}}
-                        label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }} 
+                        label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                       />
-                      <YAxis 
-                        stroke="#94a3b8" 
+                      <YAxis
+                        stroke="#94a3b8"
                         tick={{fontSize: 12}}
                         tickFormatter={formatAxis}
                       />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => formatCurrency(value)}
                         labelFormatter={(label) => `Age ${label}`}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
                       <ReferenceArea x1={params.retirementAge} x2={params.retirementAge + 0.5} stroke="none" fill="#6366f1" fillOpacity={0.2} />
-                      
+
                       <Area type="monotone" dataKey="taxable" stackId="1" stroke="#6366f1" fill="#6366f1" fillOpacity={0.8} name="Taxable" />
                       <Area type="monotone" dataKey="pretax" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.8} name="Pre-Tax" />
-                      <Area type="monotone" dataKey="roth" stackId="1" stroke="#fb923c" fill="#fb923c" fillOpacity={0.8} name="Roth" />
+                      <Area type="monotone" dataKey="roth" stackId="1" stroke="#fb923c" fill="#fb923c" fillOpacity={0.8} name="Post-Tax" />
                     </AreaChart>
                   </ResponsiveContainer>
                )}
