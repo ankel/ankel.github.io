@@ -1,0 +1,46 @@
+name: Build and deploy wealth simulator app.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'wealth-simulator/**'
+      - 'github/workflows/**wealth-simulator**'
+  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: wealth-simulator
+    concurrency:
+      group: deploy-pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup Node.js with caching
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '24' # Specify your Node.js version
+          cache: 'npm' # Enables caching for npm dependencies
+          cache-dependency-path: 'wealth-simulator/'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./wealth-simulator/dist
+          destination_dir: wealth-simulator
+          commit_message: "deploy wealth-simulator from: ${{ github.event.head_commit.message }}"

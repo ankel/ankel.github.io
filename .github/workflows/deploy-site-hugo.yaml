@@ -22,7 +22,8 @@ jobs:
     env:
       HUGO_CACHEDIR: /tmp/hugo_cache
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           submodules: recursive
           fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
@@ -33,7 +34,8 @@ jobs:
           hugo-version: "0.154.5"
           extended: true
 
-      - uses: actions/cache@v4
+      - name: Cache hugo directory
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ${{ env.HUGO_CACHEDIR }}
           key: ${{ runner.os }}-hugomod-${{ hashFiles('**/go.sum') }}
