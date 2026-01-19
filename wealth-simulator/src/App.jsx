@@ -964,7 +964,7 @@ export default function App() {
              {showTable && results && (
                <div className="overflow-x-auto rounded-b-2xl">
                  <table className="w-full text-sm text-left text-slate-600">
-                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 z-10 shadow-sm">
+                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th className="px-6 py-3 bg-slate-50">Age</th>
                             <th className="px-6 py-3 bg-slate-50">Portfolio (End)</th>

@@ -1,0 +1,4 @@
+baseURL = 'https://ankel.github.io/'
+languageCode = 'en-us'
+title = "Ankel's homepage"
+theme = 'PaperMod'

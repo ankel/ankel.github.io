@@ -1,0 +1,53 @@
+name: Build and deploy
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'github/workflows/**hugo**'
+  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: docs
+    concurrency:
+      group: deploy-pages
+      cancel-in-progress: false
+    env:
+      HUGO_CACHEDIR: /tmp/hugo_cache
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          submodules: recursive
+          fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: "0.154.5"
+          extended: true
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.HUGO_CACHEDIR }}
+          key: ${{ runner.os }}-hugomod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-hugomod-
+
+      - name: Build
+        run: hugo build --minify
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./docs/public
+          keep_files: true
+          commit_message: "deploy hugo from: ${{ github.event.head_commit.message }}"
