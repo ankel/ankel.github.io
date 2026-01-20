@@ -1,8 +1,33 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Ankel's homepage</title><link>https://ankel.github.io/posts/</link><description>Recent content in Posts on Ankel's homepage</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 18 Jan 2026 22:33:23 -0500</lastBuildDate><atom:link href="https://ankel.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Wealth Simulator</title><link>https://ankel.github.io/posts/2026/01/wealth-simulator/</link><pubDate>Sun, 18 Jan 2026 22:33:23 -0500</pubDate><guid>https://ankel.github.io/posts/2026/01/wealth-simulator/</guid><description>&lt;h2 id="wealth-simulator"&gt;Wealth Simulator&lt;/h2&gt;
-&lt;p&gt;I spent a weekend (one afternoon and one morning, to be specific) playing with Gemini. The result: &lt;a href="https://ankel.github.io/wealth-simulator/"&gt;Wealth Simulator&lt;/a&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Posts on Ankel&#39;s homepage</title>
+    <link>https://ankel.github.io/posts/</link>
+    <description>Recent content in Posts on Ankel&#39;s homepage</description>
+    <generator>Hugo -- 0.154.5</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 18 Jan 2026 22:33:23 -0500</lastBuildDate>
+    <atom:link href="https://ankel.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Wealth Simulator</title>
+      <link>https://ankel.github.io/posts/2026/01/wealth-simulator/</link>
+      <pubDate>Sun, 18 Jan 2026 22:33:23 -0500</pubDate>
+      <guid>https://ankel.github.io/posts/2026/01/wealth-simulator/</guid>
+      <description>&lt;h2 id=&#34;wealth-simulator&#34;&gt;Wealth Simulator&lt;/h2&gt;
+&lt;p&gt;I spent a weekend (one afternoon and one morning, to be specific) playing with Gemini. The result: &lt;a href=&#34;https://ankel.github.io/wealth-simulator/&#34;&gt;Wealth Simulator&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;The goal of this app is to run 1,000 iteration of Monte Carlo simulation to see how the future may play out, based on some provided inputs. The inputs are rather straightforward but do let me know if anything can be improved.&lt;/p&gt;
-&lt;h2 id="build-and-deploy"&gt;Build and Deploy&lt;/h2&gt;
-&lt;p&gt;The app is written as a single React app, and deployed as a static site on Github Pages. The build and deployment is automated through Github Action.&lt;/p&gt;</description></item><item><title>Hello World</title><link>https://ankel.github.io/posts/2026/01/hello-world/</link><pubDate>Sun, 18 Jan 2026 19:44:46 -0500</pubDate><guid>https://ankel.github.io/posts/2026/01/hello-world/</guid><description>&lt;p&gt;This repository was created three years ago. Three years, and I finally gotten around to actually build the website out of it :D&lt;/p&gt;
-&lt;h2 id="setup-overview"&gt;Setup overview&lt;/h2&gt;
+&lt;h2 id=&#34;build-and-deploy&#34;&gt;Build and Deploy&lt;/h2&gt;
+&lt;p&gt;The app is written as a single React app, and deployed as a static site on Github Pages. The build and deployment is automated through Github Action.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Hello World</title>
+      <link>https://ankel.github.io/posts/2026/01/hello-world/</link>
+      <pubDate>Sun, 18 Jan 2026 19:44:46 -0500</pubDate>
+      <guid>https://ankel.github.io/posts/2026/01/hello-world/</guid>
+      <description>&lt;p&gt;This repository was created three years ago. Three years, and I finally gotten around to actually build the website out of it :D&lt;/p&gt;
+&lt;h2 id=&#34;setup-overview&#34;&gt;Setup overview&lt;/h2&gt;
 &lt;p&gt;The site is generated using Hugo. The Hugo content is stored under &lt;code&gt;/docs&lt;/code&gt; folder. Each commit to &lt;code&gt;main&lt;/code&gt; branch triggers a github action to build and push the page.&lt;/p&gt;
-&lt;p&gt;The Github action YAML is straightforward enough. The most tricky line is perharp the &lt;code&gt;publish_dir: ./docs/public&lt;/code&gt;. This copy the content of the right place where Hugo built the site. Took me 4-5 tries to figured that out (reading the build output was very helpful!)&lt;/p&gt;</description></item></channel></rss>
+&lt;p&gt;The Github action YAML is straightforward enough. The most tricky line is perharp the &lt;code&gt;publish_dir: ./docs/public&lt;/code&gt;. This copy the content of the right place where Hugo built the site. Took me 4-5 tries to figured that out (reading the build output was very helpful!)&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
