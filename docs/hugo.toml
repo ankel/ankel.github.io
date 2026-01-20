@@ -1,8 +1,13 @@
 baseURL = 'https://ankel.github.io/'
 languageCode = "en-us"
 title = "Ankel's homepage"
-theme = "paper"
+theme = "PaperMod"
 
-[params]
-  # color style
-  color = 'linen' 
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+[minify]
+  disableXML = true
+  minifyOutput = true
