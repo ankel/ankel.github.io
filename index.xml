@@ -13,9 +13,23 @@
       <link>https://ankel.github.io/apps/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://ankel.github.io/apps/</guid>
-      <description>&lt;p&gt;Here are some simple apps hosted on this page.&lt;/p&gt;
+      <description>&lt;p&gt;Here are some simple apps hosted on this site.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://ankel.github.io/wealth-simulator/&#34;&gt;Wealth Simulator&lt;/a&gt; is a Monte Carlo retirement simulator.&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>One day</title>
+      <link>https://ankel.github.io/ideas/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://ankel.github.io/ideas/</guid>
+      <description>&lt;p&gt;Ideas for one day:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;NixOS. Basically this &lt;a href=&#34;https://michael.stapelberg.ch/posts/tags/nix/&#34;&gt;https://michael.stapelberg.ch/posts/tags/nix/&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Micro VM on Nix &lt;a href=&#34;https://github.com/microvm-nix/microvm.nix&#34;&gt;https://github.com/microvm-nix/microvm.nix&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;/ul&gt;</description>
     </item>
     <item>
