@@ -1,8 +1,12 @@
-+++
-menus = ['main']
-title = 'One day'
-weight = 200
-+++
+---
+title: "One day"
+slug: "ideas"
+menu:
+    main:
+        weight: 200
+        params: 
+            icon: chart-bubble
+---
 
 Ideas for one day:
 

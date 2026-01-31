@@ -1,8 +1,12 @@
-+++
-menus = ['main']
-title = 'Apps'
-weight = 100
-+++
+---
+title: "Apps"
+slug: "apps"
+menu:
+    main:
+        weight: 100
+        params: 
+            icon: stack-2
+---
 
 Here are some simple apps hosted on this site.
 
