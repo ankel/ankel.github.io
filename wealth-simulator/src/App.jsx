@@ -157,7 +157,6 @@ const DEFAULT_PARAMS = {
   // Spending (Dynamic)
   minSpending: 40000,          // Non-negotiable
   discretionarySpending: 20000, // Travels, etc.
-  spendingCutFlexibility: 50,   // % of discretionary that can be cut
 
   // Fixed Income (New)
   fixedIncomeAnnual: 0,        // Pension, CPP, OAS, etc.
@@ -309,7 +308,8 @@ export default function App() {
                     // Calculate shortfall relative to the portfolio need
                     const shortfall = portfolioNeed - gain;
 
-                    const maxCutAmount = params.discretionarySpending * (params.spendingCutFlexibility / 100);
+                    // Allow cutting 100% of discretionary spending if needed
+                    const maxCutAmount = params.discretionarySpending;
 
                     // We can only cut discretionary spending, even if pension covers essentials
                     const actualCut = Math.min(shortfall, maxCutAmount);
@@ -517,7 +517,7 @@ export default function App() {
 
   const totalAssets = params.taxableBalance + params.preTaxBalance + params.rothBalance;
   const targetSpending = params.minSpending + params.discretionarySpending;
-  const floorSpending = params.minSpending + (params.discretionarySpending * (1 - params.spendingCutFlexibility / 100));
+  const floorSpending = params.minSpending;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
@@ -611,7 +611,7 @@ export default function App() {
                     {activeTab === 'taxable' && (
                         <div className="animate-in fade-in slide-in-from-left-1 duration-200">
                         <div className="text-xs text-slate-400 mb-3 flex gap-2 items-center">
-                            <Wallet size={12} /> Taxed at Inc Rate × Inclusion
+                            <Wallet size={12} /> Taxed at Tax Rate × Inclusion
                         </div>
                         <InputGroup
                             label="Current Balance"
@@ -691,24 +691,17 @@ export default function App() {
                    <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Needs</h3>
                    <InputGroup
                     label="Min Spending"
-                    tooltip="Non-negotiable annual base needs"
+                    tooltip="Non-negotiable annual base needs, will never be reduced."
                     value={params.minSpending}
                     min={20000} max={300000} step={1000} unit="$"
                     onChange={(v) => updateParam('minSpending', v)}
                   />
                   <InputGroup
                     label="Discretionary"
-                    tooltip="Travel, luxury, etc."
+                    tooltip="Travel, luxury, etc. Can be reduced to zero in bad years."
                     value={params.discretionarySpending}
                     min={0} max={200000} step={1000} unit="$"
                     onChange={(v) => updateParam('discretionarySpending', v)}
-                  />
-                  <InputGroup
-                    label="Flexibility"
-                    tooltip="Max % of Discretionary to cut in bad years"
-                    value={params.spendingCutFlexibility}
-                    min={0} max={100} step={5} unit="%"
-                    onChange={(v) => updateParam('spendingCutFlexibility', v)}
                   />
 
                   <div className="h-px bg-slate-100 my-3"></div>
