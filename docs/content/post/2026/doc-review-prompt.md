@@ -1,6 +1,10 @@
 ---
 date: '2026-02-18T15:09:28Z'
 title: 'Tweaking a doc review prompt'
+tags:
+- computer
+- tips
+- llm
 ---
 
 I've been using a system prompt for a LLM agent to review my doc at work. For brevity, I will not include the full prompt here, but the gist of it is that the LLM takes on the role of an executive (Director/VP) at a large company and review / critique docs or brainstorm ideas. This works great but it has a problem where it consistently pushes back on scopes / timeline / headcount requested / etc. It gets to the point where this is (paraphrasing) the interaction I had yesterday:

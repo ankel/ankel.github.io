@@ -3,7 +3,9 @@ title: Wealth Simulator
 date: 2026-01-18T22:33:23
 image: cover.png
 tags:
-    - Apps
+    - apps
+    - computer
+    - personalfinance
 ---
 
 I spent a weekend (one afternoon and one morning, to be specific) playing with Gemini. The result: [Wealth Simulator](https://ankel.github.io/wealth-simulator/)

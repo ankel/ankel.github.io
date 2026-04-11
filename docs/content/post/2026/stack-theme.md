@@ -1,6 +1,10 @@
 ---
 title: Switching to "stack" theme.
 date: 2026-01-31T11:22:33
+tags:
+- github-pages
+- hugo
+- hugo-theme
 ---
 
 The paper theme is a bit blank, and I also don't like their look on mobile. So I started looking around and I found [Stack](https://stack.jimmycai.com/).

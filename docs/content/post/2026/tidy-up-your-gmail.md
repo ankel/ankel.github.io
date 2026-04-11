@@ -1,7 +1,9 @@
 ---
 date: '2026-02-21T09:25:12Z'
-draft: true
 title: 'Tidy Up Your Gmail'
+tags:
+- computer
+- tips
 ---
 
 Here's how I manage to stay on top of my infinitely large gmail inbox:
