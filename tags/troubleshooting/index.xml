@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Troubleshooting on Ben's homepage</title><link>https://ankel.github.io/tags/troubleshooting/</link><description>Recent content in Troubleshooting on Ben's homepage</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 10 Apr 2026 12:23:49 +0000</lastBuildDate><atom:link href="https://ankel.github.io/tags/troubleshooting/index.xml" rel="self" type="application/rss+xml"/><item><title>Sync options between two hosts</title><link>https://ankel.github.io/p/sync-options-between-two-hosts/</link><pubDate>Fri, 10 Apr 2026 12:23:49 +0000</pubDate><guid>https://ankel.github.io/p/sync-options-between-two-hosts/</guid><description>&lt;img src="https://ankel.github.io/" alt="Featured image of post Sync options between two hosts" /&gt;&lt;p&gt;If you have more than one computer, at some point, you&amp;rsquo;d want to sync files between them. This post is about how I decided on what to use.&lt;/p&gt;
+&lt;h2 id="the-what"&gt;The WHAT
+&lt;/h2&gt;&lt;h3 id="the-requirements"&gt;The requirements
+&lt;/h3&gt;&lt;p&gt;Whatever tool(s) I ended up with, it must be able to &lt;strong&gt;support SSH&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;These days, SSH is the standard for connecting between machines. It takes the encryption and the authentication part out of the equation, and I don&amp;rsquo;t trust anything else to do a better job. So whatever happens, it must happens on top of SSH, not instead of SSH.&lt;/p&gt;
+&lt;p&gt;There&amp;rsquo;s an exception, which I hope to goes into it on another day.&lt;/p&gt;
+&lt;h3 id="the-contenders"&gt;The contenders
+&lt;/h3&gt;&lt;p&gt;There are a few options to synchronize files, ranging from the most common options to the more exotic ones:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Git repository.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;rsync&lt;/code&gt; or one of its variance.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;unison&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mutagen&lt;/code&gt; (hint: the final winner).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="git-repository-or-another-version-control-system---vcs"&gt;Git repository (or another version control system - VCS)
+&lt;/h4&gt;&lt;p&gt;Very simple and straight forward:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;You set up a git repo, which can be hosted remotely (eg. Github, Gitlab, Codeberg) or on one of the machines in question.&lt;/li&gt;
+&lt;li&gt;On machine X, you ran &lt;code&gt;git commit &amp;amp;&amp;amp; git push&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;On machine Y, you ran &lt;code&gt;git pull&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This approach is great if you want to maintain a history of activities. However, for many practical purposes, &lt;strong&gt;all&lt;/strong&gt; of the history is too much.&lt;/p&gt;
+&lt;p&gt;Additionally, there are too many commands to run. And you need to remember to run them, or else there could be conflicts. Even if you run them all the time, the occasional conflicts are still unavoidable.&lt;/p&gt;
+&lt;p&gt;Occasionally check point your work is still great though, and the final solution will include git.&lt;/p&gt;
+&lt;h3 id="rsync"&gt;Rsync
+&lt;/h3&gt;&lt;p&gt;Rsync is the trusted companion when it comes to copying files between computers. There are too many options to list here, however, a basic command can be&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-fallback" data-lang="fallback"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;rsync -a --dry-run /path/to/local/ username@remote_host:/path/to/remote
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;With the slash (&lt;code&gt;/&lt;/code&gt;) at the end of local, all files under local (ie. &lt;code&gt;local/file1&lt;/code&gt;, &lt;code&gt;local/file2&lt;/code&gt;, &amp;hellip;) will be sync between the local path and the remote path (ie. &lt;code&gt;remote/file1&lt;/code&gt;, &lt;code&gt;remote/files&lt;/code&gt;, &amp;hellip;). Rsync will intelligently ignore files that has not been changed between runs, so not all files are copied all the times.&lt;/p&gt;
+&lt;p&gt;Rsync is even older git - it was first released in 1996 - and it&amp;rsquo;s very much a battle-tested solution. However, it still one-too-many commands to run, and each run needs the full path of the folders to be synchronized.&lt;/p&gt;
+&lt;p&gt;Additionally, rsync only runs one ways: it doesn&amp;rsquo;t propagate changes from the other side, by default everything in target is overwritten from source.&lt;/p&gt;
+&lt;p&gt;Last but not least, this approach doesn&amp;rsquo;t maintain a history of what happened. This can still be fine for many purposes, but for now let&amp;rsquo;s continue.&lt;/p&gt;
+&lt;h3 id="unison"&gt;Unison
+&lt;/h3&gt;&lt;p&gt;&lt;a class="link" href="https://www.cis.upenn.edu/~bcpierce/unison/" target="_blank" rel="noopener"
+ &gt;Unison is a file-synchronization tool for OSX, Unix, and Windows&lt;/a&gt;. In short, this fixes the one-directional problem of rsync.&lt;/p&gt;
+&lt;p&gt;Unison also support &amp;ldquo;Profiles&amp;rdquo; which are pre-configured host / path and other configuration options to reduce the amount of typing (and typos). Seriously, the amount of configuration it supports is nothing short of mind blowing.&lt;/p&gt;
+&lt;p&gt;The only complaint I have is that I still need to run a command to sync - though this can be easily automated eg. cronjob.&lt;/p&gt;
+&lt;h3 id="mutagen"&gt;Mutagen
+&lt;/h3&gt;&lt;p&gt;&lt;a class="link" href="https://github.com/mutagen-io/mutagen" target="_blank" rel="noopener"
+ &gt;Mutagen&lt;/a&gt; is the newest kid on the block. It&amp;rsquo;s bi-directional, and it&amp;rsquo;s automatic: it runs a daemon on both end of the sync connection and sync files without needing any other input.&lt;/p&gt;
+&lt;p&gt;This fixed my only complain about Unison&amp;hellip; and it would have been the perfect solution if not for the fact that it&amp;rsquo;s &lt;a class="link" href="https://www.docker.com/blog/mutagen-acquisition/" target="_blank" rel="noopener"
+ &gt;no longer in active development since 2023&lt;/a&gt;. And so it&amp;rsquo;s not without issues, but also not &lt;a class="link" href="#mutagen-permission-issue" &gt;without workaround&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id="the-final-solution"&gt;The final solution
+&lt;/h3&gt;&lt;p&gt;For my final solution, I combined git and mutagen. Mutagen to sync trivial edits between the two machines. And when I&amp;rsquo;m satisfied with the changes, I make a commit to preserve it for long term.&lt;/p&gt;
+&lt;h2 id="the-how"&gt;The HOW
+&lt;/h2&gt;&lt;p&gt;To create a new sync connection, run:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-fallback" data-lang="fallback"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; mutagen sync create --name=a-descriptive-name --ignore-vcs /path/to/local username@remote_host:/path/to/remote
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h2 id="mutagen-permission-issue"&gt;Mutagen Permission issue
+&lt;/h2&gt;&lt;p&gt;I ran into &lt;a class="link" href="https://github.com/mutagen-io/mutagen/issues/543" target="_blank" rel="noopener"
+ &gt;this permission issue&lt;/a&gt; where &lt;code&gt;mutagen sync create&lt;/code&gt; could not run the agent it has installed&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-zed" data-lang="zed"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;Installing&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;agent&lt;/span&gt;&lt;span class="p"&gt;...&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;beta&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;endpoint&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dial&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;agent&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;endpoint&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;install&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;agent&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;invoke&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;agent&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;installation&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;remote&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;zsh&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="err"&gt;1&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;permission&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;denied&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mutagen&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;agent29d06cd9&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;a54a&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="err"&gt;4712&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="err"&gt;8863&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;f272b238bc05&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;I found &lt;a class="link" href="https://chazeon.com/notes/software/mutagen-agents/" target="_blank" rel="noopener"
+ &gt;this page&lt;/a&gt; which described a fixed location for the agent at &lt;code&gt;.mutagen/agents/0.15.0/mutagen-agent&lt;/code&gt;, however, as confirmed by the bug report above, this location no longer works for newer version of mutagen.&lt;/p&gt;
+&lt;p&gt;Fortunately, user &lt;a class="link" href="https://github.com/Tomasvrba" target="_blank" rel="noopener"
+ &gt;Tomasvrba&lt;/a&gt; has also helpfully &lt;a class="link" href="https://github.com/mutagen-io/mutagen/issues/543#issuecomment-3258357914" target="_blank" rel="noopener"
+ &gt;provided a script&lt;/a&gt; to fix the permission of mutagen agent. With this running in the background, a sync session completes successfully.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="cp"&gt;#!/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Watching for new mutagen agent files...&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;while&lt;/span&gt; true&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;for&lt;/span&gt; f in ~/.mutagen-agent*&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# Check if the file exists and is a regular file, but not executable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; -f &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$f&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; &lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; ! -x &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$f&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; chmod +x &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$f&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Made &lt;/span&gt;&lt;span class="nv"&gt;$f&lt;/span&gt;&lt;span class="s2"&gt; executable&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; sleep 0.1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>
