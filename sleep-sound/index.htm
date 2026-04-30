@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Sleep Sounds</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            overflow: hidden;
+        }
+        
+        /* Volume Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="h-screen w-full flex items-center justify-center text-white font-sans relative">
+
+    <!-- Dynamic Star Canvas -->
+    <canvas id="starCanvas" class="absolute inset-0 z-0 pointer-events-none"></canvas>
+
+    <!-- Main Card (Glassmorphism) -->
+    <div class="relative z-10 bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 w-full max-w-sm flex flex-col items-center gap-6">
+        
+        <div class="text-center">
+            <h1 class="text-2xl font-bold tracking-wide mb-1">Sleep Sounds</h1>
+            <p class="text-slate-400 text-sm">Soothe your baby to sleep</p>
+        </div>
+
+        <div class="w-full">
+            <label for="noiseType" class="block text-sm font-medium text-slate-300 mb-2">Select Sound</label>
+            <select id="noiseType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
+                <option value="brown">Brown Noise</option>
+                <option value="pink">Pink Noise</option>
+                <option value="white">White Noise</option>
+            </select>
+        </div>
+
+        <div class="w-full flex items-center justify-between">
+            <label for="shushToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Overlay Shushing</label>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="shushToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <div class="w-full flex items-center justify-between">
+            <label for="visToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Night Sky Visualization</label>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="visToggle" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <div class="w-full flex flex-col gap-2">
+            <label for="volume" class="block text-sm font-medium text-slate-300">Volume</label>
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" class="w-full">
+        </div>
+
+        <button id="playBtn" class="mt-4 w-20 h-20 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all shadow-lg shadow-blue-900/50 focus:outline-none focus:ring-4 focus:ring-blue-400/50">
+            <!-- Play Icon -->
+            <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 ml-1" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+            <!-- Stop Icon (Hidden by default) -->
+            <svg id="stopIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 hidden" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 6h12v12H6z" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        let audioCtx;
+        let activeMainSource = null;
+        let activeShushSource = null;
+        let activeShushNodes = [];
+        let masterVolumeNode;
+        let mainVolumeNode;
+        let isPlaying = false;
+        let shushTimeoutId = null;
+        let isShushingActive = false;
+
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const stopIcon = document.getElementById('stopIcon');
+        const noiseSelector = document.getElementById('noiseType');
+        const volumeSlider = document.getElementById('volume');
+        const shushToggle = document.getElementById('shushToggle');
+        const visToggle = document.getElementById('visToggle');
+
+        // Canvas Visualization Setup
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let maxStars = 100;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // 1% of width * 1% of height
+            maxStars = (canvas.width * 0.02) * (canvas.height * 0.01);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Only spawn new stars if playing and visualization is toggled on
+            if (isPlaying && visToggle.checked) {
+                if (stars.length < maxStars && Math.random() < 0.4) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        r: Math.random() * 1.5 + 0.5,
+                        alpha: 0,
+                        delta: Math.random() * 0.02 + 0.005,
+                        // Brightness control: ranges from 0.5 to 1.0 (previously 0.2 to 1.0)
+                        maxAlpha: Math.random() * 0.5 + 0.5
+                    });
+                }
+            }
+
+            // Update and draw existing stars
+            for (let i = stars.length - 1; i >= 0; i--) {
+                let s = stars[i];
+                s.alpha += s.delta;
+                
+                if (s.alpha >= s.maxAlpha) {
+                    s.delta = -s.delta; // start fading out
+                }
+                
+                if (s.alpha <= 0) {
+                    stars.splice(i, 1); // remove dead star
+                    continue;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.fill();
+            }
+            
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Noise Generation Algorithms
+        function createNoiseBuffer(type) {
+            const bufferSize = audioCtx.sampleRate * 5; // 5 second loop
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+
+            let lastOut = 0;
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+
+                if (type === 'white') {
+                    output[i] = white * 0.5;
+                } 
+                else if (type === 'pink') {
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    output[i] *= 0.11; 
+                    b6 = white * 0.115926;
+                } 
+                else if (type === 'brown') {
+                    lastOut = (lastOut + (0.02 * white)) / 1.02;
+                    output[i] = lastOut * 3.5; 
+                }
+            }
+            return buffer;
+        }
+
+        function stopAudio() {
+            if (masterVolumeNode) {
+                masterVolumeNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+            }
+            
+            setTimeout(() => {
+                if (activeMainSource) {
+                    try { activeMainSource.stop(); } catch(e) {}
+                    activeMainSource.disconnect();
+                    activeMainSource = null;
+                }
+                stopShush();
+            }, 100);
+        }
+
+        function stopShush() {
+            isShushingActive = false;
+            if (shushTimeoutId) {
+                clearTimeout(shushTimeoutId);
+                shushTimeoutId = null;
+            }
+
+            if (activeShushSource) {
+                try { activeShushSource.stop(); } catch(e) {}
+                activeShushNodes.forEach(node => {
+                    if (node.stop) node.stop();
+                    node.disconnect();
+                });
+                activeShushSource = null;
+                activeShushNodes = [];
+            }
+        }
+
+        function updateDucking() {
+            if (!mainVolumeNode) return;
+            // Reduce main volume to 30% if shush is checked
+            const targetVolume = shushToggle.checked ? 0.3 : 1.0;
+            mainVolumeNode.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.5);
+        }
+
+        function playShush() {
+            stopShush();
+            isShushingActive = true;
+            
+            activeShushSource = audioCtx.createBufferSource();
+            activeShushSource.buffer = createNoiseBuffer('white');
+            activeShushSource.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 3500;
+            filter.Q.value = 1.0;
+
+            const shushGain = audioCtx.createGain();
+            shushGain.gain.value = 0; // Start completely quiet
+
+            activeShushSource.connect(filter);
+            filter.connect(shushGain);
+            shushGain.connect(masterVolumeNode);
+
+            activeShushNodes.push(filter, shushGain, activeShushSource);
+            activeShushSource.start();
+
+            function triggerRandomShush() {
+                if (!isShushingActive) return;
+
+                const shushDuration = Math.random() * (4 - 2) + 2; // 2s to 4s
+                const waitDuration = Math.random() * (10 - 5) + 5; // 5s to 10s
+                const now = audioCtx.currentTime;
+
+                // Envelope: Fade in, hold, fade out
+                shushGain.gain.cancelScheduledValues(now);
+                shushGain.gain.setValueAtTime(0, now);
+                shushGain.gain.linearRampToValueAtTime(0.8, now + 0.5); // 0.5s fade in
+                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.5); 
+                shushGain.gain.linearRampToValueAtTime(0, now + shushDuration); // 0.5s fade out
+
+                // Schedule the next cycle
+                shushTimeoutId = setTimeout(triggerRandomShush, (shushDuration + waitDuration) * 1000);
+            }
+
+            triggerRandomShush();
+        }
+
+        function playMain(type) {
+            if (activeMainSource) {
+                try { activeMainSource.stop(); } catch(e) {}
+                activeMainSource.disconnect();
+            }
+
+            activeMainSource = audioCtx.createBufferSource();
+            activeMainSource.buffer = createNoiseBuffer(type);
+            activeMainSource.loop = true;
+            activeMainSource.connect(mainVolumeNode);
+            activeMainSource.start();
+        }
+
+        function togglePlay() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                masterVolumeNode = audioCtx.createGain();
+                masterVolumeNode.connect(audioCtx.destination);
+                
+                mainVolumeNode = audioCtx.createGain();
+                mainVolumeNode.connect(masterVolumeNode);
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (isPlaying) {
+                stopAudio();
+                playIcon.classList.remove('hidden');
+                stopIcon.classList.add('hidden');
+                isPlaying = false;
+            } else {
+                masterVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                masterVolumeNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                masterVolumeNode.gain.linearRampToValueAtTime(volumeSlider.value, audioCtx.currentTime + 0.1);
+
+                playMain(noiseSelector.value);
+                updateDucking();
+
+                if (shushToggle.checked) {
+                    playShush();
+                }
+
+                playIcon.classList.add('hidden');
+                stopIcon.classList.remove('hidden');
+                isPlaying = true;
+            }
+        }
+
+        // Event Listeners
+        playBtn.addEventListener('click', togglePlay);
+
+        noiseSelector.addEventListener('change', () => {
+            if (isPlaying) {
+                playMain(noiseSelector.value);
+            }
+        });
+
+        shushToggle.addEventListener('change', () => {
+            if (isPlaying) {
+                updateDucking();
+                if (shushToggle.checked) {
+                    playShush();
+                } else {
+                    stopShush();
+                }
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            if (audioCtx && masterVolumeNode) {
+                masterVolumeNode.gain.setValueAtTime(e.target.value, audioCtx.currentTime);
+            }
+        });
+    </script>
+</body>
+</html>
