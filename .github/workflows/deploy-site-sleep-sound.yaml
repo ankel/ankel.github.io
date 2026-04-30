@@ -1,0 +1,33 @@
+name: Build and deploy baby sleep sound app.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sleep-sound/**'
+      - 'github/workflows/**sleep-sound**'
+  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: sleep-sound
+    concurrency:
+      group: deploy-pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./sleep-sound
+          destination_dir: sleep-sound
+          commit_message: "deploy sleep-sound from: ${{ github.event.head_commit.message }}"
