@@ -273,14 +273,14 @@
                 if (!isShushingActive) return;
 
                 const shushDuration = Math.random() * (4 - 2) + 2; // 2s to 4s
-                const waitDuration = Math.random() * (10 - 5) + 5; // 5s to 10s
+                const waitDuration = Math.random() * (8 - 3) + 3; // 3s to 8s
                 const now = audioCtx.currentTime;
 
                 // Envelope: Fade in, hold, fade out
                 shushGain.gain.cancelScheduledValues(now);
                 shushGain.gain.setValueAtTime(0, now);
-                shushGain.gain.linearRampToValueAtTime(0.8, now + 0.5); // 0.5s fade in
-                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.5); 
+                shushGain.gain.linearRampToValueAtTime(0.8, now + 1); // 0.5s fade in
+                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.75); 
                 shushGain.gain.linearRampToValueAtTime(0, now + shushDuration); // 0.5s fade out
 
                 // Schedule the next cycle
