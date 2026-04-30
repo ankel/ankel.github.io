@@ -6,6 +6,15 @@
     <title>Baby Sleep Sounds</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --slider-track: #cbd5e1;
+            --slider-thumb: #ffffff;
+        }
+        .playing-theme {
+            --slider-track: #475569;
+            --slider-thumb: #64748b;
+        }
+
         body {
             background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
             overflow: hidden;
@@ -21,23 +30,26 @@
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #ffffff;
+            background: var(--slider-thumb);
             cursor: pointer;
             margin-top: -6px;
+            transition: background 0.5s;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #cbd5e1;
+            background: var(--slider-track);
             border-radius: 2px;
+            transition: background 0.5s;
         }
         input[type=range]::-moz-range-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #cbd5e1;
+            background: var(--slider-track);
             border-radius: 2px;
+            transition: background 0.5s;
         }
     </style>
 </head>
@@ -50,41 +62,43 @@
     <div class="relative z-10 bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 w-full max-w-sm flex flex-col items-center gap-6">
         
         <div class="text-center">
-            <h1 class="text-2xl font-bold tracking-wide mb-1">Sleep Sounds</h1>
-            <p class="text-slate-400 text-sm">Soothe your baby to sleep</p>
+            <h1 id="appTitle" class="text-2xl font-bold tracking-wide mb-1 text-white transition-colors duration-500">Sleep Sounds</h1>
+            <p id="appSubtitle" class="text-slate-400 text-sm transition-colors duration-500">Soothe your baby to sleep</p>
         </div>
 
-        <div class="w-full">
-            <label for="noiseType" class="block text-sm font-medium text-slate-300 mb-2">Select Sound</label>
-            <select id="noiseType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
-                <option value="brown">Brown Noise</option>
-                <option value="pink">Pink Noise</option>
-                <option value="white">White Noise</option>
-            </select>
+        <div id="settingsContainer" class="w-full flex flex-col gap-6 overflow-hidden transition-all duration-500 max-h-[500px] opacity-100">
+            <div class="w-full">
+                <label for="noiseType" class="block text-sm font-medium text-slate-300 mb-2">Select Sound</label>
+                <select id="noiseType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
+                    <option value="brown">Brown Noise</option>
+                    <option value="pink">Pink Noise</option>
+                    <option value="white">White Noise</option>
+                </select>
+            </div>
+
+            <div class="w-full flex items-center justify-between">
+                <label for="shushToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Overlay Shushing</label>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="shushToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <div class="w-full flex items-center justify-between">
+                <label for="visToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Night Sky Visualization</label>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="visToggle" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
         </div>
 
-        <div class="w-full flex items-center justify-between">
-            <label for="shushToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Overlay Shushing</label>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="shushToggle" class="sr-only peer">
-                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
-
-        <div class="w-full flex items-center justify-between">
-            <label for="visToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Night Sky Visualization</label>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="visToggle" class="sr-only peer" checked>
-                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
-
-        <div class="w-full flex flex-col gap-2">
-            <label for="volume" class="block text-sm font-medium text-slate-300">Volume</label>
+        <div class="w-full flex flex-col gap-2 mt-2">
+            <label id="volumeLabel" for="volume" class="block text-sm font-medium text-slate-300 transition-colors duration-500">Volume</label>
             <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" class="w-full">
         </div>
 
-        <button id="playBtn" class="mt-4 w-20 h-20 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all shadow-lg shadow-blue-900/50 focus:outline-none focus:ring-4 focus:ring-blue-400/50">
+        <button id="playBtn" class="mt-4 w-20 h-20 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-all duration-500 shadow-lg shadow-blue-900/50 focus:outline-none focus:ring-4 focus:ring-blue-400/50">
             <!-- Play Icon -->
             <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 ml-1" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
@@ -112,8 +126,12 @@
         const stopIcon = document.getElementById('stopIcon');
         const noiseSelector = document.getElementById('noiseType');
         const volumeSlider = document.getElementById('volume');
+        const volumeLabel = document.getElementById('volumeLabel');
         const shushToggle = document.getElementById('shushToggle');
         const visToggle = document.getElementById('visToggle');
+        const settingsContainer = document.getElementById('settingsContainer');
+        const appTitle = document.getElementById('appTitle');
+        const appSubtitle = document.getElementById('appSubtitle');
 
         // Canvas Visualization Setup
         const canvas = document.getElementById('starCanvas');
@@ -142,7 +160,7 @@
                         r: Math.random() * 1.5 + 0.5,
                         alpha: 0,
                         delta: Math.random() * 0.02 + 0.005,
-                        // Brightness control: ranges from 0.5 to 1.0 (previously 0.2 to 1.0)
+                        // Brightness control: ranges from 0.5 to 1.0
                         maxAlpha: Math.random() * 0.5 + 0.5
                     });
                 }
@@ -256,7 +274,7 @@
 
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.value = 3500;
+            filter.frequency.value = 2500;
             filter.Q.value = 1.0;
 
             const shushGain = audioCtx.createGain();
@@ -272,16 +290,16 @@
             function triggerRandomShush() {
                 if (!isShushingActive) return;
 
-                const shushDuration = Math.random() * (4 - 2) + 2; // 2s to 4s
-                const waitDuration = Math.random() * (8 - 3) + 3; // 3s to 8s
+                const shushDuration = Math.random() * (5 - 3) + 3; // 3s to 5s
+                const waitDuration = Math.random() * (10 - 4) + 4; // 4s to 10s
                 const now = audioCtx.currentTime;
 
                 // Envelope: Fade in, hold, fade out
                 shushGain.gain.cancelScheduledValues(now);
                 shushGain.gain.setValueAtTime(0, now);
-                shushGain.gain.linearRampToValueAtTime(0.8, now + 1); // 0.5s fade in
-                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.75); 
-                shushGain.gain.linearRampToValueAtTime(0, now + shushDuration); // 0.5s fade out
+                shushGain.gain.linearRampToValueAtTime(0.8, now + 1.5); // 1s fade in
+                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 1.5); 
+                shushGain.gain.linearRampToValueAtTime(0, now + shushDuration); // 0.75s fade out
 
                 // Schedule the next cycle
                 shushTimeoutId = setTimeout(triggerRandomShush, (shushDuration + waitDuration) * 1000);
@@ -322,6 +340,16 @@
                 stopAudio();
                 playIcon.classList.remove('hidden');
                 stopIcon.classList.add('hidden');
+                settingsContainer.classList.remove('max-h-0', 'opacity-0');
+                settingsContainer.classList.add('max-h-[500px]', 'opacity-100');
+
+                appTitle.classList.replace('text-slate-500', 'text-white');
+                appSubtitle.classList.replace('text-slate-600', 'text-slate-400');
+                playBtn.classList.remove('bg-white/5', 'hover:bg-white/10', 'shadow-none', 'text-slate-500');
+                playBtn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-900/50', 'text-white');
+                volumeLabel.classList.replace('text-slate-600', 'text-slate-300');
+                document.body.classList.remove('playing-theme');
+
                 isPlaying = false;
             } else {
                 masterVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -337,6 +365,16 @@
 
                 playIcon.classList.add('hidden');
                 stopIcon.classList.remove('hidden');
+                settingsContainer.classList.remove('max-h-[500px]', 'opacity-100');
+                settingsContainer.classList.add('max-h-0', 'opacity-0');
+
+                appTitle.classList.replace('text-white', 'text-slate-500');
+                appSubtitle.classList.replace('text-slate-400', 'text-slate-600');
+                playBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-900/50', 'text-white');
+                playBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'shadow-none', 'text-slate-500');
+                volumeLabel.classList.replace('text-slate-300', 'text-slate-600');
+                document.body.classList.add('playing-theme');
+
                 isPlaying = true;
             }
         }
