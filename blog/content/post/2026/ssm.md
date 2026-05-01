@@ -1,5 +1,5 @@
 ---
-date: '2026-04-21T018:13:16Z'
+date: '2026-04-21T18:13:16Z'
 title: 'Simple Secret Manager - or Rust vs Go'
 draft: true
 tags:
