@@ -142,8 +142,7 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // 1% of width * 1% of height
-            maxStars = (canvas.width * 0.02) * (canvas.height * 0.01);
+            maxStars = Math.floor((canvas.width * 0.01) + (canvas.height * 0.01));
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -151,39 +150,62 @@
         function animateStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Only spawn new stars if playing and visualization is toggled on
             if (isPlaying && visToggle.checked) {
                 if (stars.length < maxStars && Math.random() < 0.4) {
                     stars.push({
                         x: Math.random() * canvas.width,
                         y: Math.random() * canvas.height,
                         r: Math.random() * 2 + 0.5,
+                        flareSize: Math.random() * 6 + 4,
                         alpha: 0,
-                        delta: Math.random() * 0.02 + 0.0005,
-                        // Brightness control: ranges from 0.5 to 1.0
-                        maxAlpha: Math.random() * 0.5 + 0.5
+                        delta: Math.random() * 0.01 + 0.0005,
+                        maxAlpha: Math.random() * 0.5 + 0.5,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.02
                     });
                 }
             }
 
-            // Update and draw existing stars
             for (let i = stars.length - 1; i >= 0; i--) {
                 let s = stars[i];
                 s.alpha += s.delta;
+                s.rotation += s.rotationSpeed;
                 
                 if (s.alpha >= s.maxAlpha) {
-                    s.delta = -s.delta; // start fading out
+                    s.delta = -s.delta;
                 }
                 
                 if (s.alpha <= 0) {
-                    stars.splice(i, 1); // remove dead star
+                    stars.splice(i, 1);
                     continue;
                 }
                 
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.rotate(s.rotation);
+                
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                
+                // Draw the core star
+                ctx.arc(0, 0, s.r, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Draw the lens flare cross
+                ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha * 0.5})`;
+                ctx.lineWidth = 0.5;
+                
+                ctx.beginPath();
+                ctx.moveTo(-s.flareSize, 0);
+                ctx.lineTo(s.flareSize, 0);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, -s.flareSize);
+                ctx.lineTo(0, s.flareSize);
+                ctx.stroke();
+                
+                ctx.restore();
             }
             
             requestAnimationFrame(animateStars);
@@ -192,7 +214,7 @@
 
         // Noise Generation Algorithms
         function createNoiseBuffer(type) {
-            const bufferSize = audioCtx.sampleRate * 5; // 5 second loop
+            const bufferSize = audioCtx.sampleRate * 5;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const output = buffer.getChannelData(0);
 
@@ -259,7 +281,6 @@
 
         function updateDucking() {
             if (!mainVolumeNode) return;
-            // Reduce main volume to 30% if shush is checked
             const targetVolume = shushToggle.checked ? 0.3 : 1.0;
             mainVolumeNode.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.5);
         }
@@ -274,11 +295,11 @@
 
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.value = 2500;
+            filter.frequency.value = 4000;
             filter.Q.value = 1.0;
 
             const shushGain = audioCtx.createGain();
-            shushGain.gain.value = 0; // Start completely quiet
+            shushGain.gain.value = 0;
 
             activeShushSource.connect(filter);
             filter.connect(shushGain);
@@ -290,18 +311,16 @@
             function triggerRandomShush() {
                 if (!isShushingActive) return;
 
-                const shushDuration = Math.random() * (5 - 3) + 3; // 3s to 5s
-                const waitDuration = Math.random() * (10 - 4) + 4; // 4s to 10s
+                const shushDuration = Math.random() * (5 - 3) + 3;
+                const waitDuration = Math.random() * (10 - 4) + 4;
                 const now = audioCtx.currentTime;
 
-                // Envelope: Fade in, hold, fade out
                 shushGain.gain.cancelScheduledValues(now);
                 shushGain.gain.setValueAtTime(0, now);
-                shushGain.gain.linearRampToValueAtTime(0.8, now + 1.5); // 1s fade in
-                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 1.5); 
-                shushGain.gain.linearRampToValueAtTime(0, now + shushDuration); // 0.75s fade out
+                shushGain.gain.linearRampToValueAtTime(0.8, now + 1.5);
+                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.75); 
+                shushGain.gain.linearRampToValueAtTime(0, now + shushDuration);
 
-                // Schedule the next cycle
                 shushTimeoutId = setTimeout(triggerRandomShush, (shushDuration + waitDuration) * 1000);
             }
 
@@ -324,10 +343,8 @@
         function togglePlay() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
                 masterVolumeNode = audioCtx.createGain();
                 masterVolumeNode.connect(audioCtx.destination);
-                
                 mainVolumeNode = audioCtx.createGain();
                 mainVolumeNode.connect(masterVolumeNode);
             }
@@ -379,7 +396,6 @@
             }
         }
 
-        // Event Listeners
         playBtn.addEventListener('click', togglePlay);
 
         noiseSelector.addEventListener('change', () => {
