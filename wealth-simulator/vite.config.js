@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/wealth-simulator/',
+  base: '/apps/wealth-simulator/',
   plugins: [
     react(),
     tailwindcss(),

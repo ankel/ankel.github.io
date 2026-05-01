@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'docs/**'
+      - 'blog/**'
       - 'github/workflows/**hugo**'
   workflow_dispatch:  # Allow manual trigger
 permissions:
@@ -43,7 +43,7 @@ jobs:
             ${{ runner.os }}-hugomod-
 
       - name: Build
-        run: hugo build --minify
+        run: hugo build --minify --baseURL https://ankel.github.io/blog/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
@@ -51,5 +51,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./docs/public
-          keep_files: true
+          destination_dir: blog
           commit_message: "deploy hugo from: ${{ github.event.head_commit.message }}"

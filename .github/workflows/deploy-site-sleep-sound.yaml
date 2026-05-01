@@ -29,5 +29,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./sleep-sound
-          destination_dir: sleep-sound
+          destination_dir: apps/sleep-sound
           commit_message: "deploy sleep-sound from: ${{ github.event.head_commit.message }}"

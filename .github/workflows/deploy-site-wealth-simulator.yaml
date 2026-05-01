@@ -42,5 +42,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./wealth-simulator/dist
-          destination_dir: wealth-simulator
+          destination_dir: apps/wealth-simulator
           commit_message: "deploy wealth-simulator from: ${{ github.event.head_commit.message }}"
