@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: docs
+        working-directory: blog
     concurrency:
       group: deploy-pages
       cancel-in-progress: false
@@ -50,6 +50,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./docs/public
+          publish_dir: ./blog/public
           destination_dir: blog
           commit_message: "deploy hugo from: ${{ github.event.head_commit.message }}"
