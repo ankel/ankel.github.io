@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
             --slider-track: #cbd5e1;
             --slider-thumb: #ffffff;
         }
+
         .playing-theme {
             --slider-track: #475569;
             --slider-thumb: #64748b;
@@ -19,12 +21,13 @@
             background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
             overflow: hidden;
         }
-        
+
         /* Volume Slider Styling */
         input[type=range] {
             -webkit-appearance: none;
             background: transparent;
         }
+
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
@@ -35,6 +38,7 @@
             margin-top: -6px;
             transition: background 0.5s;
         }
+
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -43,6 +47,7 @@
             border-radius: 2px;
             transition: background 0.5s;
         }
+
         input[type=range]::-moz-range-track {
             width: 100%;
             height: 4px;
@@ -51,25 +56,53 @@
             border-radius: 2px;
             transition: background 0.5s;
         }
+
+        body.oled-mode {
+            background: #000000 !important;
+        }
     </style>
 </head>
+
 <body class="h-screen w-full flex items-center justify-center text-white font-sans relative">
 
     <!-- Dynamic Star Canvas -->
     <canvas id="starCanvas" class="absolute inset-0 z-0 pointer-events-none"></canvas>
 
     <!-- Main Card (Glassmorphism) -->
-    <div class="relative z-10 bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 w-full max-w-sm flex flex-col items-center gap-6">
-        
+    <div id="mainCard"
+        class="relative z-10 bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 w-full max-w-sm flex flex-col items-center gap-6 transition-transform duration-[5000ms] ease-in-out">
+
+        <!-- Fullscreen Button -->
+        <button id="fsBtn"
+            class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors focus:outline-none"
+            title="Toggle Fullscreen">
+            <!-- Expand Icon -->
+            <svg id="fsExpandIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            <!-- Minimize Icon -->
+            <svg id="fsMinimizeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4l5 5m0 0V4m0 5H4M20 4l-5 5m0 0V4m0 5h5M4 20l5-5m0 0v5m0-5H4M20 20l-5-5m0 0v5m0-5h5" />
+            </svg>
+        </button>
+
         <div class="text-center">
-            <h1 id="appTitle" class="text-2xl font-bold tracking-wide mb-1 text-white transition-colors duration-500">Sleep Sounds</h1>
-            <p id="appSubtitle" class="text-slate-400 text-sm transition-colors duration-500">Soothe your baby to sleep</p>
+            <h1 id="appTitle" class="text-2xl font-bold tracking-wide mb-1 text-white transition-colors duration-500">
+                Sleep Sounds</h1>
+            <p id="appSubtitle" class="text-slate-400 text-sm transition-colors duration-500">Soothe your baby to sleep
+            </p>
         </div>
 
-        <div id="settingsContainer" class="w-full flex flex-col gap-6 overflow-hidden transition-all duration-500 max-h-[500px] opacity-100">
+        <div id="settingsContainer"
+            class="w-full flex flex-col gap-6 overflow-hidden transition-all duration-500 max-h-[500px] opacity-100">
             <div class="w-full">
                 <label for="noiseType" class="block text-sm font-medium text-slate-300 mb-2">Select Sound</label>
-                <select id="noiseType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
+                <select id="noiseType"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
                     <option value="brown">Brown Noise</option>
                     <option value="pink">Pink Noise</option>
                     <option value="white">White Noise</option>
@@ -77,37 +110,88 @@
             </div>
 
             <div class="w-full flex items-center justify-between">
-                <label for="shushToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Overlay Shushing</label>
+                <label for="shushToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Overlay
+                    Shushing</label>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="shushToggle" class="sr-only peer">
-                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div
+                        class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
                 </label>
             </div>
 
             <div class="w-full flex items-center justify-between">
-                <label for="visToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Night Sky Visualization</label>
+                <label id="visToggleLabel" for="visToggle"
+                    class="text-sm font-medium text-slate-300 cursor-pointer transition-opacity">Night Sky
+                    Visualization</label>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="visToggle" class="sr-only peer" checked>
-                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div
+                        class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed">
+                    </div>
+                </label>
+            </div>
+
+            <!-- Keep Screen On Toggle -->
+            <div class="w-full flex items-center justify-between">
+                <div class="flex flex-col">
+                    <label for="wakeToggle" class="text-sm font-medium text-slate-300 cursor-pointer">Keep Screen
+                        On</label>
+                    <span class="text-[10px] leading-tight text-slate-500 mr-2">Prevents mobile from sleeping and
+                        stopping sound</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" id="wakeToggle" class="sr-only peer">
+                    <div
+                        class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+
+            <!-- OLED Mode Toggle -->
+            <div class="w-full flex items-center justify-between">
+                <div class="flex flex-col">
+                    <label for="oledToggle" class="text-sm font-medium text-slate-300 cursor-pointer">OLED
+                        Optimization</label>
+                    <span class="text-[10px] leading-tight text-slate-500 mr-2">Black background, no visualization,
+                        moves panel to prevent
+                        burn-in</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" id="oledToggle" class="sr-only peer">
+                    <div
+                        class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
                 </label>
             </div>
         </div>
 
         <div class="w-full flex flex-col gap-2 mt-2">
-            <label id="volumeLabel" for="volume" class="block text-sm font-medium text-slate-300 transition-colors duration-500">Volume</label>
+            <label id="volumeLabel" for="volume"
+                class="block text-sm font-medium text-slate-300 transition-colors duration-500">Volume</label>
             <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" class="w-full">
         </div>
 
-        <button id="playBtn" class="mt-4 w-20 h-20 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-all duration-500 shadow-lg shadow-blue-900/50 focus:outline-none focus:ring-4 focus:ring-blue-400/50">
+        <button id="playBtn"
+            class="mt-4 w-20 h-20 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-all duration-500 shadow-lg shadow-blue-900/50 focus:outline-none focus:ring-4 focus:ring-blue-400/50">
             <!-- Play Icon -->
-            <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 ml-1" viewBox="0 0 24 24" fill="currentColor">
+            <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 ml-1" viewBox="0 0 24 24"
+                fill="currentColor">
                 <path d="M8 5v14l11-7z" />
             </svg>
             <!-- Stop Icon (Hidden by default) -->
-            <svg id="stopIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 hidden" viewBox="0 0 24 24" fill="currentColor">
+            <svg id="stopIcon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 hidden" viewBox="0 0 24 24"
+                fill="currentColor">
                 <path d="M6 6h12v12H6z" />
             </svg>
         </button>
+
+        <!-- Stats Container -->
+        <div id="statsContainer"
+            class="w-full flex justify-between text-xs text-slate-500 opacity-0 max-h-0 overflow-hidden transition-all duration-500">
+            <div>Start: <span id="startTimeLabel" class="font-medium text-slate-400">--:--</span></div>
+            <div>Duration: <span id="durationLabel" class="font-medium text-slate-400">0m</span></div>
+        </div>
     </div>
 
     <script>
@@ -129,9 +213,131 @@
         const volumeLabel = document.getElementById('volumeLabel');
         const shushToggle = document.getElementById('shushToggle');
         const visToggle = document.getElementById('visToggle');
+        const wakeToggle = document.getElementById('wakeToggle');
+        const oledToggle = document.getElementById('oledToggle');
+        const fsBtn = document.getElementById('fsBtn');
+        const fsExpandIcon = document.getElementById('fsExpandIcon');
+        const fsMinimizeIcon = document.getElementById('fsMinimizeIcon');
+        const mainCard = document.getElementById('mainCard');
+        const statsContainer = document.getElementById('statsContainer');
+        const startTimeLabel = document.getElementById('startTimeLabel');
+        const durationLabel = document.getElementById('durationLabel');
         const settingsContainer = document.getElementById('settingsContainer');
         const appTitle = document.getElementById('appTitle');
         const appSubtitle = document.getElementById('appSubtitle');
+        const visToggleLabel = document.getElementById('visToggleLabel');
+
+        let wakeLockSentinel = null;
+        let oledIntervalId = null;
+        let playStartTime = null;
+        let durationIntervalId = null;
+
+        // Fullscreen Logic
+        fsBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fsExpandIcon.classList.add('hidden');
+                fsMinimizeIcon.classList.remove('hidden');
+            } else {
+                fsExpandIcon.classList.remove('hidden');
+                fsMinimizeIcon.classList.add('hidden');
+            }
+        });
+
+        // Wake Lock Logic
+        async function requestWakeLock() {
+            if (wakeToggle.checked && 'wakeLock' in navigator) {
+                try {
+                    wakeLockSentinel = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLockSentinel !== null) {
+                wakeLockSentinel.release().then(() => { wakeLockSentinel = null; });
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLockSentinel !== null && document.visibilityState === 'visible' && isPlaying) {
+                requestWakeLock();
+            }
+        });
+
+        // OLED Movement Logic
+        oledToggle.addEventListener('change', () => {
+            if (oledToggle.checked) {
+                visToggle.checked = false;
+                visToggle.disabled = true;
+                visToggleLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                visToggleLabel.classList.remove('cursor-pointer');
+            } else {
+                visToggle.disabled = false;
+                visToggleLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+                visToggleLabel.classList.add('cursor-pointer');
+            }
+        });
+
+        function startOledMovement() {
+            if (!oledToggle.checked) return;
+            document.body.classList.add('oled-mode');
+
+            oledIntervalId = setInterval(() => {
+                const maxX = (window.innerWidth - mainCard.offsetWidth) / 2 - 20;
+                const maxY = (window.innerHeight - mainCard.offsetHeight) / 2 - 20;
+
+                const randomX = (Math.random() * 2 - 1) * Math.max(0, maxX);
+                const randomY = (Math.random() * 2 - 1) * Math.max(0, maxY);
+
+                mainCard.style.transform = `translate(${randomX}px, ${randomY}px)`;
+            }, 30000); // 30 seconds
+
+            // Trigger first movement slightly after start
+            setTimeout(() => {
+                if (isPlaying && oledToggle.checked) {
+                    const maxX = (window.innerWidth - mainCard.offsetWidth) / 2 - 20;
+                    const maxY = (window.innerHeight - mainCard.offsetHeight) / 2 - 20;
+                    mainCard.style.transform = `translate(${(Math.random() * 2 - 1) * Math.max(0, maxX)}px, ${(Math.random() * 2 - 1) * Math.max(0, maxY)}px)`;
+                }
+            }, 500);
+        }
+
+        function stopOledMovement() {
+            if (oledIntervalId) {
+                clearInterval(oledIntervalId);
+                oledIntervalId = null;
+            }
+            document.body.classList.remove('oled-mode');
+            mainCard.style.transform = `translate(0px, 0px)`;
+        }
+
+        // Stats Logic
+        function updateDuration() {
+            if (!playStartTime) return;
+            const now = new Date();
+            const diffMs = now - playStartTime;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 60) {
+                durationLabel.textContent = `${diffMins}m`;
+            } else {
+                const hours = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                durationLabel.textContent = `${hours}h ${mins}m`;
+            }
+        }
 
         // Canvas Visualization Setup
         const canvas = document.getElementById('starCanvas');
@@ -149,8 +355,8 @@
 
         function animateStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (isPlaying && visToggle.checked) {
+
+            if (isPlaying && visToggle.checked && !oledToggle.checked) {
                 if (stars.length < maxStars && Math.random() < 0.4) {
                     stars.push({
                         x: Math.random() * canvas.width,
@@ -170,23 +376,23 @@
                 let s = stars[i];
                 s.alpha += s.delta;
                 s.rotation += s.rotationSpeed;
-                
+
                 if (s.alpha >= s.maxAlpha) {
                     s.delta = -s.delta;
                 }
-                
+
                 if (s.alpha <= 0) {
                     stars.splice(i, 1);
                     continue;
                 }
-                
+
                 ctx.save();
                 ctx.translate(s.x, s.y);
                 ctx.rotate(s.rotation);
-                
+
                 ctx.beginPath();
                 ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-                
+
                 // Draw the core star
                 ctx.arc(0, 0, s.r, 0, Math.PI * 2);
                 ctx.fill();
@@ -194,20 +400,20 @@
                 // Draw the lens flare cross
                 ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha * 0.5})`;
                 ctx.lineWidth = 0.5;
-                
+
                 ctx.beginPath();
                 ctx.moveTo(-s.flareSize, 0);
                 ctx.lineTo(s.flareSize, 0);
                 ctx.stroke();
-                
+
                 ctx.beginPath();
                 ctx.moveTo(0, -s.flareSize);
                 ctx.lineTo(0, s.flareSize);
                 ctx.stroke();
-                
+
                 ctx.restore();
             }
-            
+
             requestAnimationFrame(animateStars);
         }
         animateStars();
@@ -226,7 +432,7 @@
 
                 if (type === 'white') {
                     output[i] = white * 0.5;
-                } 
+                }
                 else if (type === 'pink') {
                     b0 = 0.99886 * b0 + white * 0.0555179;
                     b1 = 0.99332 * b1 + white * 0.0750759;
@@ -235,12 +441,12 @@
                     b4 = 0.55000 * b4 + white * 0.5329522;
                     b5 = -0.7616 * b5 - white * 0.0168980;
                     output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-                    output[i] *= 0.11; 
+                    output[i] *= 0.11;
                     b6 = white * 0.115926;
-                } 
+                }
                 else if (type === 'brown') {
                     lastOut = (lastOut + (0.02 * white)) / 1.02;
-                    output[i] = lastOut * 3.5; 
+                    output[i] = lastOut * 3.5;
                 }
             }
             return buffer;
@@ -250,10 +456,10 @@
             if (masterVolumeNode) {
                 masterVolumeNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
             }
-            
+
             setTimeout(() => {
                 if (activeMainSource) {
-                    try { activeMainSource.stop(); } catch(e) {}
+                    try { activeMainSource.stop(); } catch (e) { }
                     activeMainSource.disconnect();
                     activeMainSource = null;
                 }
@@ -269,7 +475,7 @@
             }
 
             if (activeShushSource) {
-                try { activeShushSource.stop(); } catch(e) {}
+                try { activeShushSource.stop(); } catch (e) { }
                 activeShushNodes.forEach(node => {
                     if (node.stop) node.stop();
                     node.disconnect();
@@ -288,7 +494,7 @@
         function playShush() {
             stopShush();
             isShushingActive = true;
-            
+
             activeShushSource = audioCtx.createBufferSource();
             activeShushSource.buffer = createNoiseBuffer('white');
             activeShushSource.loop = true;
@@ -318,7 +524,7 @@
                 shushGain.gain.cancelScheduledValues(now);
                 shushGain.gain.setValueAtTime(0, now);
                 shushGain.gain.linearRampToValueAtTime(0.8, now + 1.5);
-                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.75); 
+                shushGain.gain.setValueAtTime(0.8, now + shushDuration - 0.75);
                 shushGain.gain.linearRampToValueAtTime(0, now + shushDuration);
 
                 shushTimeoutId = setTimeout(triggerRandomShush, (shushDuration + waitDuration) * 1000);
@@ -329,7 +535,7 @@
 
         function playMain(type) {
             if (activeMainSource) {
-                try { activeMainSource.stop(); } catch(e) {}
+                try { activeMainSource.stop(); } catch (e) { }
                 activeMainSource.disconnect();
             }
 
@@ -360,12 +566,22 @@
                 settingsContainer.classList.remove('max-h-0', 'opacity-0');
                 settingsContainer.classList.add('max-h-[500px]', 'opacity-100');
 
+                statsContainer.classList.remove('opacity-100', 'max-h-10', 'mt-4');
+                statsContainer.classList.add('opacity-0', 'max-h-0');
+
                 appTitle.classList.replace('text-slate-500', 'text-white');
                 appSubtitle.classList.replace('text-slate-600', 'text-slate-400');
                 playBtn.classList.remove('bg-white/5', 'hover:bg-white/10', 'shadow-none', 'text-slate-500');
                 playBtn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-900/50', 'text-white');
                 volumeLabel.classList.replace('text-slate-600', 'text-slate-300');
                 document.body.classList.remove('playing-theme');
+
+                releaseWakeLock();
+                stopOledMovement();
+                if (durationIntervalId) {
+                    clearInterval(durationIntervalId);
+                    durationIntervalId = null;
+                }
 
                 isPlaying = false;
             } else {
@@ -385,12 +601,25 @@
                 settingsContainer.classList.remove('max-h-[500px]', 'opacity-100');
                 settingsContainer.classList.add('max-h-0', 'opacity-0');
 
+                statsContainer.classList.remove('opacity-0', 'max-h-0');
+                statsContainer.classList.add('opacity-100', 'max-h-10', 'mt-4');
+
                 appTitle.classList.replace('text-white', 'text-slate-500');
                 appSubtitle.classList.replace('text-slate-400', 'text-slate-600');
                 playBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-900/50', 'text-white');
                 playBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'shadow-none', 'text-slate-500');
                 volumeLabel.classList.replace('text-slate-300', 'text-slate-600');
                 document.body.classList.add('playing-theme');
+
+                requestWakeLock();
+                if (oledToggle.checked) {
+                    startOledMovement();
+                }
+
+                playStartTime = new Date();
+                startTimeLabel.textContent = playStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                durationLabel.textContent = "0m";
+                durationIntervalId = setInterval(updateDuration, 60000);
 
                 isPlaying = true;
             }
@@ -422,4 +651,5 @@
         });
     </script>
 </body>
+
 </html>
