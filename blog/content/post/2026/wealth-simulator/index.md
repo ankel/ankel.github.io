@@ -6,6 +6,7 @@ tags:
     - apps
     - computer
     - personalfinance
+    - vibe-coding
 ---
 
 I spent a weekend (one afternoon and one morning, to be specific) playing with Gemini. The result: [Wealth Simulator](https://ankel.github.io/apps/wealth-simulator/)

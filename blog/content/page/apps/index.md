@@ -10,4 +10,6 @@ menu:
 
 Here are some simple apps hosted on this site.
 
-* [Wealth Simulator](https://ankel.github.io/apps/wealth-simulator/) is a Monte Carlo retirement simulator.
+* [Wealth simulator](https://ankel.github.io/apps/wealth-simulator/) is a Monte Carlo retirement simulator.
+
+* [Baby sleep sound](https://ankel.github.io/apps/sleep-sound/) is a white noise generator to help putting your baby to sleep.
