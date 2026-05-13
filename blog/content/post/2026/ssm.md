@@ -5,6 +5,8 @@ tags:
 - computer
 - apps
 - programming
+- baby-bonding-2026
+- vibe-coding
 ---
 
 ## Simple secret manager

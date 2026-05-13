@@ -5,7 +5,7 @@ image: cover.png
 tags:
     - apps
     - computer
-    - baby
+    - baby-bonding-2026
     - vibe-coding
 ---
 
