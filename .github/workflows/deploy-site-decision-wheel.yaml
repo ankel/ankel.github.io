@@ -1,0 +1,33 @@
+name: Build and deploy decision wheel app.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'decisions/**'
+      - '.github/workflows/**decision-wheel**'
+  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: decisions
+    concurrency:
+      group: deploy-pages-decisions
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./decisions
+          destination_dir: apps/decisions
+          commit_message: "deploy decision-wheel from: ${{ github.event.head_commit.message }}"
