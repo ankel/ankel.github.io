@@ -3,7 +3,7 @@ date: '2026-06-02T14:46:35Z'
 title: 'Decision Wheel'
 ---
 
-Not much more to talk about here. I was on a car ride with fam & friends, and we were decision what to have for dinner. So I pulled out my phone and quickly whipped up this app.
+Not much more to talk about here. I was on a car ride with fam & friends, and we were decision what to have for dinner. So I pulled out my phone and quickly whipped up this app https://ankel.github.io/apps/decisions/ 
 
 V0 of the app was written essentially one-shot. I can't even remember what I complained about so it must have been a very minor thing. Otherwise, it's immediately useable.
 

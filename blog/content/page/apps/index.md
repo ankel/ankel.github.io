@@ -13,3 +13,5 @@ Here are some simple apps hosted on this site.
 * [Wealth simulator](https://ankel.github.io/apps/wealth-simulator/) is a Monte Carlo retirement simulator.
 
 * [Baby sleep sound](https://ankel.github.io/apps/sleep-sound/) is a white noise generator to help putting your baby to sleep.
+
+* [Decision wheel](https://ankel.github.io/apps/decisions/) to help you make decisions.
