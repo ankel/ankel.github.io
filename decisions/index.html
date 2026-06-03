@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Decision Wheel</title>
+    <!-- Tailwind CSS for modern layout & styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for a satisfying celebration effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        .interactive-scale {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .interactive-scale:active {
+            transform: scale(0.95);
+        }
+        /* Custom scrollbar styling for the options list */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col md:flex-row font-sans overflow-hidden">
+
+    <!-- Left Controls Panel -->
+    <div class="w-full md:w-96 bg-slate-800/80 border-b md:border-b-0 md:border-r border-slate-700 p-6 flex flex-col justify-between shrink-0 z-10 backdrop-blur-md">
+        <div class="flex flex-col h-full overflow-hidden">
+            <div class="flex items-center gap-3 mb-4 shrink-0">
+                <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Decision Wheel</h1>
+            </div>
+
+            <p class="text-xs text-slate-400 mb-4 shrink-0">Manage your list of options below. The wheel updates instantly.</p>
+
+            <!-- Dynamically Controlled Options Container -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-1 mb-4 space-y-2" id="optionsContainer">
+                <!-- Rows will be injected here by Javascript -->
+            </div>
+
+            <!-- Add Option Button Row -->
+            <button 
+                id="addOptionBtn"
+                class="w-full py-2.5 mb-6 border border-dashed border-slate-600 hover:border-emerald-500 text-slate-400 hover:text-emerald-400 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-colors cursor-pointer shrink-0"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Option
+            </button>
+        </div>
+
+        <div class="space-y-3 shrink-0">
+            <button 
+                id="spinBtn" 
+                class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-lg rounded-xl shadow-lg shadow-emerald-500/20 interactive-scale transition-colors cursor-pointer"
+            >
+                SPIN THE WHEEL
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Canvas/Wheel Panel -->
+    <div class="flex-grow flex flex-col items-center justify-center p-6 relative">
+        
+        <!-- Wheel Container -->
+        <div class="relative w-full max-w-[85vw] sm:max-w-[450px] md:max-w-[500px] aspect-square flex items-center justify-center">
+            
+            <!-- Selection Marker/Ticker -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center pointer-events-none">
+                <div class="w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[30px] border-t-rose-500 drop-shadow-[0_4px_6px_rgba(244,63,94,0.4)]"></div>
+                <div class="w-2 h-2 rounded-full bg-rose-500 -mt-1 shadow-md"></div>
+            </div>
+
+            <canvas id="wheelCanvas" class="w-full h-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-shadow duration-300"></canvas>
+            
+            <!-- Center hub cap -->
+            <div class="absolute w-12 h-12 md:w-16 md:h-16 bg-slate-900 border-4 border-slate-700 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.8)] pointer-events-none">
+                <div class="w-3 h-3 md:w-4 md:h-4 rounded-full bg-emerald-400 animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- Pop-up Overlay for Winner Announcement -->
+        <div id="winnerOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center z-30 transition-all duration-300 opacity-0">
+            <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-center transform scale-95 transition-transform duration-300" id="winnerCard">
+                <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-400 mb-2 block">The wheel has spoken</span>
+                <h3 id="winnerText" class="text-2xl md:text-3xl font-black text-white mb-6 break-words leading-tight"></h3>
+                <button 
+                    id="closeWinnerBtn" 
+                    class="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-lg interactive-scale transition-colors cursor-pointer"
+                >
+                    Awesome
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const addOptionBtn = document.getElementById('addOptionBtn');
+        const spinBtn = document.getElementById('spinBtn');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const winnerCard = document.getElementById('winnerCard');
+        const winnerText = document.getElementById('winnerText');
+        const closeWinnerBtn = document.getElementById('closeWinnerBtn');
+
+        let options = [];
+        let currentAngle = 0;
+        let isSpinning = false;
+
+        // Spin timing and state
+        let spinStartTime = 0;
+        const PHASE1_DURATION = 2000; // Speed up
+        const PHASE2_DURATION = 3000; // Constant
+        const PHASE3_DURATION = 5000; // Slow down
+        const TOTAL_DURATION = PHASE1_DURATION + PHASE2_DURATION + PHASE3_DURATION;
+        
+        let startAngle = 0;
+        let totalRotation = 0;
+
+        // Default list of options
+        let defaultOptions = [
+            "🍕 Order Pizza",
+            "🎯 Hit the Gym",
+            "🎮 Play Games",
+            "📚 Read a Book",
+            "💤 Take a Nap"
+        ];
+
+        // Aesthetic, modern palette for high contrast
+        const colors = [
+            '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', 
+            '#f59e0b', '#06b6d4', '#f43f5e', '#6366f1'
+        ];
+
+        // Build list elements
+        function createOptionRow(val = '') {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 option-row';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = val;
+            input.placeholder = 'Enter choice...';
+            input.className = 'option-input flex-grow bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm font-medium';
+            
+            // Re-draw wheel dynamically as the user types
+            input.addEventListener('input', () => {
+                if (!isSpinning) drawWheel();
+            });
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-btn p-2.5 bg-slate-700/50 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg transition-colors cursor-pointer shrink-0';
+            removeBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                </svg>
+            `;
+            
+            removeBtn.addEventListener('click', () => {
+                if (isSpinning) return;
+                row.remove();
+                drawWheel();
+            });
+
+            row.appendChild(input);
+            row.appendChild(removeBtn);
+            optionsContainer.appendChild(row);
+        }
+
+        // Initialize state on load
+        function initOptions() {
+            defaultOptions.forEach(opt => createOptionRow(opt));
+            drawWheel();
+        }
+
+        // Fit canvas to crisp pixel resolution
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            drawWheel();
+        }
+
+        function getOptions() {
+            const inputs = document.querySelectorAll('.option-input');
+            return Array.from(inputs)
+                .map(input => input.value.trim())
+                .filter(val => val.length > 0);
+        }
+
+        function drawWheel() {
+            options = getOptions();
+            const numSlices = options.length;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 15;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (numSlices === 0) {
+                // Empty State Placeholder
+                ctx.fillStyle = '#334155';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = `bold ${Math.max(14, canvas.width * 0.04)}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Add some options!', centerX, centerY);
+                return;
+            }
+
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            options.forEach((option, i) => {
+                const startSlice = currentAngle + (i * sliceAngle);
+                const endSlice = startSlice + sliceAngle;
+
+                // 1. Draw Slice sector
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startSlice, endSlice);
+                ctx.closePath();
+                ctx.fill();
+
+                // 2. Stroke subtle separators
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 3. Draw text label
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startSlice + sliceAngle / 2);
+                
+                ctx.fillStyle = '#ffffff';
+                const fontSize = Math.max(12, Math.floor(radius * 0.09));
+                ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+
+                // Truncate text elegantly if too long
+                const maxTextWidth = radius * 0.65;
+                let textToDraw = option;
+                if (ctx.measureText(textToDraw).width > maxTextWidth) {
+                    while (ctx.measureText(textToDraw + '...').width > maxTextWidth && textToDraw.length > 0) {
+                        textToDraw = textToDraw.slice(0, -1);
+                    }
+                    textToDraw += '...';
+                }
+
+                // Shadow to ensure high text readability
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowBlur = 4;
+
+                ctx.fillText(textToDraw, radius - 30, 0);
+                ctx.restore();
+            });
+
+            // Outer decorative ring
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        // --- Core Spinning Mechanics ---
+
+        function toggleInputsState(disabled) {
+            const inputs = document.querySelectorAll('.option-input');
+            const removeButtons = document.querySelectorAll('.remove-btn');
+            
+            inputs.forEach(input => input.disabled = disabled);
+            removeButtons.forEach(btn => btn.disabled = disabled);
+            addOptionBtn.disabled = disabled;
+            
+            if (disabled) {
+                addOptionBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                addOptionBtn.classList.remove('hover:border-emerald-500', 'hover:text-emerald-400');
+            } else {
+                addOptionBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+                addOptionBtn.classList.add('hover:border-emerald-500', 'hover:text-emerald-400');
+            }
+        }
+
+        function startSpinning() {
+            isSpinning = true;
+            spinBtn.disabled = true;
+            toggleInputsState(true);
+            winnerOverlay.classList.add('hidden');
+            
+            spinStartTime = performance.now();
+            startAngle = currentAngle % (2 * Math.PI);
+            
+            // Randomly decide how many full rotations + target offset
+            const minRotations = 15;
+            const extraRotations = Math.random() * 10;
+            totalRotation = (minRotations + extraRotations) * 2 * Math.PI;
+            
+            requestAnimationFrame(animationLoop);
+        }
+
+        function animationLoop(timestamp) {
+            if (!isSpinning) return;
+
+            const now = timestamp || performance.now();
+            const elapsed = now - spinStartTime;
+            let progress = 0;
+
+            if (elapsed < PHASE1_DURATION) {
+                // Phase 1: Speed up (Quadratic ease-in)
+                const t = elapsed / PHASE1_DURATION;
+                const phaseProgress = t * t; 
+                // Weight phase 1 as 15% of total rotation
+                progress = phaseProgress * (PHASE1_DURATION / TOTAL_DURATION);
+            } else if (elapsed < PHASE1_DURATION + PHASE2_DURATION) {
+                // Phase 2: Constant speed
+                const t = (elapsed - PHASE1_DURATION) / PHASE2_DURATION;
+                const p1End = (PHASE1_DURATION / TOTAL_DURATION);
+                const p2Weight = (PHASE2_DURATION / TOTAL_DURATION);
+                progress = p1End + t * p2Weight;
+            } else if (elapsed < TOTAL_DURATION) {
+                // Phase 3: Slow down (Quadratic ease-out)
+                const t = (elapsed - PHASE1_DURATION - PHASE2_DURATION) / PHASE3_DURATION;
+                const p1End = (PHASE1_DURATION / TOTAL_DURATION);
+                const p2End = p1End + (PHASE2_DURATION / TOTAL_DURATION);
+                const p3Weight = (PHASE3_DURATION / TOTAL_DURATION);
+                const phaseProgress = t * (2 - t);
+                progress = p2End + phaseProgress * p3Weight;
+            } else {
+                progress = 1;
+            }
+
+            currentAngle = startAngle + progress * totalRotation;
+            drawWheel();
+
+            if (elapsed < TOTAL_DURATION) {
+                requestAnimationFrame(animationLoop);
+            } else {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                toggleInputsState(false);
+                displayWinner();
+            }
+        }
+
+        function displayWinner() {
+            const numSlices = options.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+            
+            let pointerAngle = 3 * Math.PI / 2;
+            let normalizedAngle = (pointerAngle - currentAngle) % (2 * Math.PI);
+            if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+
+            const winningIndex = Math.floor(normalizedAngle / sliceAngle) % numSlices;
+            const winner = options[winningIndex];
+
+            winnerText.innerText = winner;
+            winnerOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                winnerOverlay.classList.remove('opacity-0');
+                winnerCard.classList.remove('scale-95');
+            }, 10);
+
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.8 }
+            });
+        }
+
+        // --- Action Handlers ---
+
+        addOptionBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            createOptionRow('');
+            drawWheel();
+            
+            // Auto-scroll options panel to the newly added row
+            optionsContainer.scrollTop = optionsContainer.scrollHeight;
+        });
+
+        spinBtn.addEventListener('click', () => {
+            options = getOptions();
+            if (options.length === 0 || isSpinning) return;
+            startSpinning();
+        });
+
+        closeWinnerBtn.addEventListener('click', () => {
+            winnerOverlay.classList.add('opacity-0');
+            winnerCard.classList.add('scale-95');
+            setTimeout(() => {
+                winnerOverlay.classList.add('hidden');
+            }, 300);
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Boot Setup
+        initOptions();
+        resizeCanvas();
+    </script>
+</body>
+</html>
