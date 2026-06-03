@@ -1,4 +1,23 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Ben's homepage</title><link>/blog/post/</link><description>Recent content in Posts on Ben's homepage</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 03 May 2026 10:38:57 +0000</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Baby Sleep Sound</title><link>/blog/p/baby-sleep-sound/</link><pubDate>Sun, 03 May 2026 10:38:57 +0000</pubDate><guid>/blog/p/baby-sleep-sound/</guid><description>&lt;img src="/blog/p/baby-sleep-sound/cover.png" alt="Featured image of post Baby Sleep Sound" /&gt;&lt;h1 id="white-noise-generator-app"&gt;White noise generator app
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Ben's homepage</title><link>/blog/post/</link><description>Recent content in Posts on Ben's homepage</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 02 Jun 2026 14:46:35 +0000</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Decision Wheel</title><link>/blog/p/decision-wheel/</link><pubDate>Tue, 02 Jun 2026 14:46:35 +0000</pubDate><guid>/blog/p/decision-wheel/</guid><description>&lt;p&gt;Not much more to talk about here. I was on a car ride with fam &amp;amp; friends, and we were decision what to have for dinner. So I pulled out my phone and quickly whipped up this app.&lt;/p&gt;
+&lt;p&gt;V0 of the app was written essentially one-shot. I can&amp;rsquo;t even remember what I complained about so it must have been a very minor thing. Otherwise, it&amp;rsquo;s immediately useable.&lt;/p&gt;
+&lt;p&gt;Once I got home, I asked Gemini to remove the drag-to-spin feature because it&amp;rsquo;s too finicky on mobile. I further asked it to review the code and make improvements and here are its finding:&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Critical Fixes:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Smooth Animation: Fixed the &amp;ldquo;velocity jerk&amp;rdquo; by implementing area-under-the-curve weighting. The transitions between the 2s speed-up, 3s constant, and 5s slow-down phases are now mathematically continuous and visually seamless.&lt;/li&gt;
+&lt;li&gt;Performance Optimization: Removed heavy DOM queries from the animation loop. The options array is now cached and only updated when you add, remove, or edit an option, drastically reducing the CPU load while the wheel is spinning.&lt;/li&gt;
+&lt;li&gt;Mobile Scrolling: Fixed the &amp;ldquo;scroll trap&amp;rdquo; by changing the body overflow settings. You can now scroll vertically on mobile devices when the options and wheel stack on top of each other.&lt;/li&gt;
+&lt;li&gt;High-DPI Displays: Added ctx.scale() logic to ensure the wheel and text look razor-sharp on Retina and 4K displays.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Enhancements:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Accessibility: Added aria-label to inputs, role=&amp;ldquo;img&amp;rdquo; to the canvas, and role=&amp;ldquo;dialog&amp;rdquo; to the winner popup to support screen readers.&lt;/li&gt;
+&lt;li&gt;Robust Transitions: Replaced setTimeout with a double requestAnimationFrame for the winner popup to ensure the &amp;ldquo;fade-in&amp;rdquo; animation triggers reliably every time.&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;The performance issue was visible on mobile when I used it, but again not really a big deal for something that&amp;rsquo;s supposed to be used once (no re-roll please, that&amp;rsquo;s cheating 😛).&lt;/p&gt;</description></item><item><title>Baby Sleep Sound</title><link>/blog/p/baby-sleep-sound/</link><pubDate>Sun, 03 May 2026 10:38:57 +0000</pubDate><guid>/blog/p/baby-sleep-sound/</guid><description>&lt;img src="/blog/p/baby-sleep-sound/cover.png" alt="Featured image of post Baby Sleep Sound" /&gt;&lt;h1 id="white-noise-generator-app"&gt;White noise generator app
 &lt;/h1&gt;&lt;p&gt;I have a newborn, which means my Youtube history is full of searches for white noise videos. And they work very well to put a baby to sleep.&lt;/p&gt;
 &lt;p&gt;Adding some Gemini-powered vibe coding into the mix, allow me to present: &lt;a class="link" href="https://ankel.github.io/apps/sleep-sound/" target="_blank" rel="noopener"
  &gt;Baby sleep sound&lt;/a&gt; is a single page app white noise generator. Better yet, it&amp;rsquo;s actually a single HTML file and can be opened locally (still need internet since it uses some Tailwind CSS though).&lt;/p&gt;
