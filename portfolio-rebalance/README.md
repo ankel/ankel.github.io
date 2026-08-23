@@ -20,7 +20,7 @@ When contributing new cash into an investment portfolio, investors often want to
 - **Buy Allocation ($x_i \ge 0$)**: Amount of new cash to allocate to each security.
 - **Future Value ($v'_i = v_i + x_i$)**: Value of each security post-rebalancing.
 - **Future Weight (%)**: New portfolio percentage for each security.
-- **Rebalancing Status**: Categorized as *On Target*, *Partially Rebalanced*, *Overweight (No Buy)*, or *Zero Target*.
+- **Rebalancing Status**: Categorized as *On Target*, *Partially Rebalanced*, *Overweight (No Buy)*, *Underweight (No Cash)*, or *Zero Target*.
 
 ---
 
@@ -76,7 +76,7 @@ Open your browser at: **`http://localhost:8000/portfolio-rebalance/`**
 
 ## 🧪 Unit Tests
 
-The core algorithm is tested across 12 comprehensive test cases covering:
+The core algorithm is tested across 21 comprehensive test cases covering:
 - Two-asset partial rebalance (underweight vs overweight).
 - Multi-asset breakpoint transitions (Bogleheads 3-fund, Ray Dalio All-Weather).
 - Full rebalancing with large cash inflow.
@@ -88,6 +88,10 @@ The core algorithm is tested across 12 comprehensive test cases covering:
 - Cash conservation invariant ($\sum x_i = C$).
 - Relative proportionality among receiving assets.
 - Input validation and weight normalization.
+- Cash conservation (allocations sum exactly to inflow).
+- Internal weight normalization when weights do not sum to 100.
+- Zero-cash underweight status handling.
+- Input coercion (negative/NaN/string cash, missing unit price, empty portfolio).
 
 ### Run Tests with Node.js
 ```bash

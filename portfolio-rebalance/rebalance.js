@@ -169,12 +169,12 @@ export function rebalancePortfolio(cashInflow, securities, options = {}) {
     } else if (cashAlloc === 0 && futureWeightPct > targetWeightPct + 0.05) {
       status = "overweight";
       statusLabel = "Overweight (No Buy)";
+    } else if (cashAlloc === 0 && futureWeightPct < targetWeightPct - 0.05) {
+      status = "underweight";
+      statusLabel = "Underweight (No Cash)";
     } else if (cashAlloc > 0 && futureWeightPct < targetWeightPct - 0.05) {
       status = "partially_rebalanced";
       statusLabel = "Partially Rebalanced";
-    } else {
-      status = "target_met";
-      statusLabel = "Target Reached";
     }
 
     return {

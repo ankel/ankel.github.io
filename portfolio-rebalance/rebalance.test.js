@@ -117,6 +117,30 @@ describe("Cash-Inflow Portfolio Rebalancing (Long-Only / No-Sale)", () => {
     assertClose(result.securities[1].futureValue, 500);
   });
 
+  it("reports underweight status when cash inflow is zero", () => {
+    // With cash = 0, an underweight asset receives no buy and sits 20
+    // percentage points below target: it must not be labeled as on target.
+    const result = rebalancePortfolio(0, [
+      { name: "VTI", currentValue: 700, targetWeight: 50 },
+      { name: "BND", currentValue: 300, targetWeight: 50 }
+    ]);
+
+    const vti = result.securities.find(s => s.name === "VTI");
+    const bnd = result.securities.find(s => s.name === "BND");
+
+    // Overweight asset is correctly flagged.
+    assert.equal(vti.status, "overweight");
+
+    // Underweight asset: 30% actual vs 50% target, zero allocation.
+    assertClose(bnd.cashAllocated, 0);
+    assertClose(bnd.futureWeightPct, 30, "BND stays at 30%");
+    assertClose(bnd.targetWeightPct, 50, "BND target is 50%");
+    assert.ok(bnd.futureWeightPct < bnd.targetWeightPct - 0.05, "BND is underweight");
+
+    assert.equal(bnd.status, "underweight");
+    assert.equal(bnd.statusLabel, "Underweight (No Cash)");
+  });
+
   it("handles empty initial portfolio (all current values are 0)", () => {
     const result = rebalancePortfolio(1000, [
       { name: "Stock", currentValue: 0, targetWeight: 70 },
@@ -198,6 +222,109 @@ describe("Cash-Inflow Portfolio Rebalancing (Long-Only / No-Sale)", () => {
     assertClose(b.sharesToBuy, 4); // 100 / 25
     assertClose(b.shareCountAfter, 8); // (100 + 100) / 25
   });
+  it("conserves cash: allocations sum to inflow with nothing unallocated", () => {
+    const cash = 1337;
+    const result = rebalancePortfolio(cash, [
+      { name: "A", currentValue: 400, targetWeight: 35 },
+      { name: "B", currentValue: 250, targetWeight: 25 },
+      { name: "C", currentValue: 90, targetWeight: 40 }
+    ]);
+
+    const sumAllocated = result.securities.reduce((acc, s) => acc + s.cashAllocated, 0);
+    assertClose(sumAllocated, cash, "Sum of per-asset allocations equals inflow");
+    assertClose(result.allocatedCash, cash, "allocatedCash equals inflow");
+    assertClose(result.unallocatedCash, 0, "No cash left unallocated");
+  });
+
+  it("internally normalizes target weights that do not sum to 100", () => {
+    // 60/30 sums to 90; effective fractions are 2/3 and 1/3.
+    // V = 100, cash = 50 -> V' = 150. Normalized targets: A = 100, B = 50.
+    // B is already at target; all cash goes to A.
+    const result = rebalancePortfolio(50, [
+      { name: "A", currentValue: 50, targetWeight: 60 },
+      { name: "B", currentValue: 50, targetWeight: 30 }
+    ]);
+
+    assertClose(result.rawSumWeight, 90);
+    assert.equal(result.isWeightSum100, false);
+    assertClose(result.securities[0].targetWeightPct, 600 / 9, "60/90 normalized to 66.67%");
+    assertClose(result.securities[1].targetWeightPct, 300 / 9, "30/90 normalized to 33.33%");
+    assertClose(result.securities[0].cashAllocated, 50);
+    assertClose(result.securities[1].cashAllocated, 0);
+  });
+
+  it("handles an empty securities array", () => {
+    const result = rebalancePortfolio(250, []);
+
+    assertClose(result.totalCurrentValue, 0);
+    assertClose(result.totalFutureValue, 250);
+    assertClose(result.allocatedCash, 0);
+    assertClose(result.unallocatedCash, 250);
+    assert.equal(result.securities.length, 0);
+  });
+
+  it("allocates no cash when every target weight is zero", () => {
+    const result = rebalancePortfolio(100, [
+      { name: "A", currentValue: 100, targetWeight: 0 },
+      { name: "B", currentValue: 100, targetWeight: 0 }
+    ]);
+
+    result.securities.forEach(s => {
+      assertClose(s.cashAllocated, 0);
+      assertClose(s.futureValue, s.currentValue);
+      assert.equal(s.status, "zero_target");
+    });
+    assertClose(result.allocatedCash, 0);
+    assertClose(result.unallocatedCash, 100);
+  });
+
+  it("labels assets exactly on target at the breakpoint as target_met", () => {
+    // A: 80 @ 50% (r = 160), B: 20 @ 50% (r = 40). Cash = 60 -> V' = 160.
+    // B's buy lands exactly on A's breakpoint: both settle at 80/160 = 50%,
+    // so both are on target despite B receiving all the cash.
+    const result = rebalancePortfolio(60, [
+      { name: "A", currentValue: 80, targetWeight: 50 },
+      { name: "B", currentValue: 20, targetWeight: 50 }
+    ]);
+
+    const a = result.securities.find(s => s.name === "A");
+    const b = result.securities.find(s => s.name === "B");
+
+    assertClose(a.cashAllocated, 0);
+    assertClose(b.cashAllocated, 60);
+    assertClose(b.futureValue, 80);
+    assert.equal(a.status, "target_met");
+    assert.equal(b.status, "target_met");
+    assertClose(result.driftAfter, 0, "Exactly on target after breakpoint rebalance");
+  });
+
+  it("coerces invalid cash inflow to zero and accepts numeric strings", () => {
+    const sec = [{ name: "A", currentValue: 100, targetWeight: 100 }];
+
+    const negative = rebalancePortfolio(-50, sec);
+    assertClose(negative.cashInflow, 0);
+    assertClose(negative.securities[0].cashAllocated, 0);
+
+    const nan = rebalancePortfolio(NaN, sec);
+    assertClose(nan.cashInflow, 0);
+
+    const str = rebalancePortfolio("75", sec);
+    assertClose(str.cashInflow, 75);
+    assertClose(str.securities[0].cashAllocated, 75);
+  });
+
+  it("leaves share fields null when unitPrice is absent", () => {
+    const result = rebalancePortfolio(50, [
+      { name: "A", currentValue: 50, targetWeight: 100 }
+    ]);
+
+    const s = result.securities[0];
+    assert.equal(s.unitPrice, null);
+    assert.equal(s.shareCountBefore, null);
+    assert.equal(s.sharesToBuy, null);
+    assert.equal(s.shareCountAfter, null);
+  });
+
 });
 
 describe("Helper Functions", () => {
@@ -224,4 +351,28 @@ describe("Helper Functions", () => {
     assertClose(normalized[0].targetWeight, 50);
     assertClose(normalized[1].targetWeight, 50);
   });
+  it("calculates drift from known values", () => {
+    // Exact 50/50 split vs 50/50 target -> zero drift.
+    assertClose(
+      calculateDrift(
+        [{ value: 50, targetFraction: 0.5 }, { value: 50, targetFraction: 0.5 }],
+        100
+      ),
+      0
+    );
+
+    // 70/30 split vs 50/50 target -> 20% drift.
+    assertClose(
+      calculateDrift(
+        [{ value: 70, targetFraction: 0.5 }, { value: 30, targetFraction: 0.5 }],
+        100
+      ),
+      20
+    );
+
+    // Degenerate inputs -> 0.
+    assertClose(calculateDrift([], 100), 0);
+    assertClose(calculateDrift([{ value: 50, targetFraction: 0.5 }], 0), 0);
+  });
+
 });
