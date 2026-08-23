@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths:
-      - 'sleep-sound/**'
-      - 'github/workflows/**sleep-sound**'
+      - 'apps/sleep-sound/**'
+      - '.github/workflows/**sleep-sound**'
   workflow_dispatch:  # Allow manual trigger
 permissions:
   contents: write
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: sleep-sound
+        working-directory: apps/sleep-sound
     concurrency:
       group: deploy-pages
       cancel-in-progress: false
@@ -28,6 +28,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./sleep-sound
+          publish_dir: ./apps/sleep-sound
           destination_dir: apps/sleep-sound
           commit_message: "deploy sleep-sound from: ${{ github.event.head_commit.message }}"

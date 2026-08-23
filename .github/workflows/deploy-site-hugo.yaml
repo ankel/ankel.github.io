@@ -5,7 +5,7 @@ on:
       - main
     paths:
       - 'blog/**'
-      - 'github/workflows/**hugo**'
+      - '.github/workflows/**hugo**'
   workflow_dispatch:  # Allow manual trigger
 permissions:
   contents: write

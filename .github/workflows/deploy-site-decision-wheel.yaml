@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'decisions/**'
+      - 'apps/decisions/**'
       - '.github/workflows/**decision-wheel**'
   workflow_dispatch:  # Allow manual trigger
 permissions:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: decisions
+        working-directory: apps/decisions
     concurrency:
       group: deploy-pages-decisions
       cancel-in-progress: false
@@ -28,6 +28,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./decisions
+          publish_dir: ./apps/decisions
           destination_dir: apps/decisions
           commit_message: "deploy decision-wheel from: ${{ github.event.head_commit.message }}"

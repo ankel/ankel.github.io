@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths:
-      - 'wealth-simulator/**'
-      - 'github/workflows/**wealth-simulator**'
+      - 'apps/wealth-simulator/**'
+      - '.github/workflows/**wealth-simulator**'
   workflow_dispatch:  # Allow manual trigger
 permissions:
   contents: write
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: wealth-simulator
+        working-directory: apps/wealth-simulator
     concurrency:
       group: deploy-pages
       cancel-in-progress: false
@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '24' # Specify your Node.js version
           cache: 'npm' # Enables caching for npm dependencies
-          cache-dependency-path: 'wealth-simulator/'
+          cache-dependency-path: 'apps/wealth-simulator/'
 
       - name: Install dependencies
         run: npm ci
@@ -41,6 +41,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./wealth-simulator/dist
+          publish_dir: ./apps/wealth-simulator/dist
           destination_dir: apps/wealth-simulator
           commit_message: "deploy wealth-simulator from: ${{ github.event.head_commit.message }}"
