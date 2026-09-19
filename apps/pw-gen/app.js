@@ -142,6 +142,15 @@
   }
 
   /**
+   * Adjusts output textarea height dynamically so all lines fit without vertical scrollbars
+   */
+  function adjustTextareaHeight() {
+    if (!passwordOutput) return;
+    passwordOutput.style.height = 'auto';
+    passwordOutput.style.height = `${passwordOutput.scrollHeight + 2}px`;
+  }
+
+  /**
    * Generates 10 passwords and updates the UI
    */
   function generatePasswords() {
@@ -171,6 +180,7 @@
       passwordOutput.value = '';
       passwordOutput.placeholder = 'Please select at least one character set above.';
       updateStrength(0, 0);
+      adjustTextareaHeight();
       return;
     }
 
@@ -185,6 +195,7 @@
     passwordOutput.value = passwords.join('\n');
     updateStrength(length, poolSize);
     updatePresetPills(length);
+    adjustTextareaHeight();
   }
 
   /**
@@ -342,4 +353,5 @@
 
   // Initial generation on load
   generatePasswords();
+  window.addEventListener('resize', adjustTextareaHeight);
 })();
