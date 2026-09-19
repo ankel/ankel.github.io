@@ -15,3 +15,5 @@ Here are some simple apps hosted on this site.
 * [Baby sleep sound](https://ankel.github.io/apps/sleep-sound/) is a white noise generator to help putting your baby to sleep.
 
 * [Decision wheel](https://ankel.github.io/apps/decisions/) to help you make decisions.
+
+* [Password generator](https://ankel.github.io/apps/pw-gen/) generates cryptographically secure passwords locally in your browser.

@@ -1,0 +1,33 @@
+name: Build and deploy password generator app.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/pw-gen/**'
+      - '.github/workflows/**pw-gen**'
+  workflow_dispatch:  # Allow manual trigger
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/pw-gen
+    concurrency:
+      group: deploy-pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./apps/pw-gen
+          destination_dir: apps/pw-gen
+          commit_message: "deploy pw-gen from: ${{ github.event.head_commit.message }}"
