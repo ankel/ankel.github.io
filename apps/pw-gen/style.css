@@ -59,9 +59,12 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1rem;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -85,8 +88,8 @@ body {
   width: 100%;
   max-width: 580px;
   padding: 2.25rem 2rem;
+  margin: auto;
   position: relative;
-  overflow: hidden;
   transition: box-shadow 0.2s ease;
 }
 
@@ -463,7 +466,9 @@ body {
 
 .password-output-box {
   width: 100%;
-  height: 252px;
+  height: auto;
+  min-height: calc(10 * 1.6em + 1.7rem + 6px);
+  field-sizing: content;
   padding: 0.85rem 1rem;
   font-family: var(--font-mono);
   font-size: 0.9375rem;
@@ -473,11 +478,12 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(203, 213, 225, 0.85);
   border-radius: var(--radius-md);
-  resize: vertical;
+  resize: none;
   outline: none;
   cursor: text;
   white-space: pre;
   overflow-x: auto;
+  overflow-y: hidden;
   user-select: text;
   -webkit-user-select: text;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
