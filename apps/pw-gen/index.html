@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Clean, responsive, client-side password generator using the Web Crypto API.">
+  <title>Client-side Password Generator</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Main UI Element: Centered rectangle with round corners -->
+  <main class="generator-card" role="main">
+    
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="title-badge">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </svg>
+        <span>100% Client-Side</span>
+      </div>
+      <h1 class="app-title">Client-side Password Generator</h1>
+      <p class="app-subtitle">Generate secure random passwords locally via the Web Crypto API.</p>
+    </header>
+
+    <!-- Warning alert when all character sets are deselected -->
+    <div id="warningBox" class="warning-box" role="alert">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+      </svg>
+      <span>Please select at least one character set below.</span>
+    </div>
+
+    <!-- Password Length Control -->
+    <section class="control-group">
+      <div class="group-header">
+        <label for="lengthSlider" class="group-label">Password Length</label>
+        <div class="preset-pills">
+          <button type="button" class="preset-pill interactive-scale" data-len="12">12</button>
+          <button type="button" class="preset-pill interactive-scale active" data-len="16">16</button>
+          <button type="button" class="preset-pill interactive-scale" data-len="24">24</button>
+          <button type="button" class="preset-pill interactive-scale" data-len="32">32</button>
+        </div>
+      </div>
+      <div class="length-controls">
+        <div class="slider-wrapper">
+          <input 
+            type="range" 
+            id="lengthSlider" 
+            class="slider" 
+            min="4" 
+            max="64" 
+            value="16" 
+            aria-label="Password length slider"
+          >
+        </div>
+        <input 
+          type="number" 
+          id="lengthInput" 
+          class="length-number-input" 
+          min="4" 
+          max="64" 
+          value="16" 
+          aria-label="Password length number input"
+        >
+      </div>
+    </section>
+
+    <!-- Character Set Checkboxes -->
+    <section class="control-group">
+      <div class="group-header">
+        <span class="group-label">Character Sets</span>
+      </div>
+      <div class="charset-grid">
+        <!-- Upper Case (checked by default) -->
+        <label class="checkbox-label" for="charsetUpper">
+          <input type="checkbox" id="charsetUpper" class="custom-checkbox" checked>
+          <div class="checkbox-content">
+            <span class="checkbox-title">Upper case</span>
+            <span class="checkbox-hint">A-Z</span>
+          </div>
+        </label>
+
+        <!-- Lower Case (checked by default) -->
+        <label class="checkbox-label" for="charsetLower">
+          <input type="checkbox" id="charsetLower" class="custom-checkbox" checked>
+          <div class="checkbox-content">
+            <span class="checkbox-title">Lower case</span>
+            <span class="checkbox-hint">a-z</span>
+          </div>
+        </label>
+
+        <!-- Number (checked by default) -->
+        <label class="checkbox-label" for="charsetNumber">
+          <input type="checkbox" id="charsetNumber" class="custom-checkbox" checked>
+          <div class="checkbox-content">
+            <span class="checkbox-title">Number</span>
+            <span class="checkbox-hint">0-9</span>
+          </div>
+        </label>
+
+        <!-- Special char (!@#$%^&* unchecked by default) -->
+        <label class="checkbox-label" for="charsetSpecial">
+          <input type="checkbox" id="charsetSpecial" class="custom-checkbox">
+          <div class="checkbox-content">
+            <span class="checkbox-title">Special char</span>
+            <span class="checkbox-hint">!@#$%^&amp;*</span>
+          </div>
+        </label>
+      </div>
+    </section>
+
+    <!-- Entropy & Strength Indicator -->
+    <div class="strength-container" aria-live="polite">
+      <div class="strength-meta">
+        <span>Estimated Entropy:</span>
+        <strong id="entropyBits">~95.2 bits</strong>
+      </div>
+      <span id="strengthBadge" class="strength-badge strong">Strong</span>
+    </div>
+
+    <!-- Generated Passwords Output (Selection-only, No input) -->
+    <section class="output-group">
+      <div class="output-header">
+        <label for="passwordOutput" class="group-label">Generated Passwords (10)</label>
+        <div class="action-buttons">
+          <button type="button" id="regenBtn" class="action-btn interactive-scale" title="Generate another 10 passwords">
+            <svg id="regenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            <span>Regenerate</span>
+          </button>
+          <button type="button" id="copyBtn" class="action-btn interactive-scale" title="Copy all 10 passwords to clipboard">
+            <svg id="copyIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnText">Copy All</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="password-textarea-wrapper">
+        <textarea 
+          id="passwordOutput" 
+          class="password-output-box" 
+          readonly 
+          rows="10" 
+          spellcheck="false" 
+          aria-readonly="true" 
+          aria-label="10 Generated passwords (selection only, no typing allowed)"
+        ></textarea>
+      </div>
+
+      <div class="output-footer">
+        <span class="badge-tag">🔒 Selection-only text box</span>
+        <span>Double-click a line to select</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
