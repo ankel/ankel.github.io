@@ -61,11 +61,13 @@ $$\frac{v'_i}{v'_j} = \frac{w_i}{w_j}$$
 
 From the repository root:
 ```bash
-./serve.sh
+cd apps/portfolio-rebalance
+../serve.sh
 ```
-Or specify a custom port:
+
+Or with a custom port:
 ```bash
-./serve.sh 8080
+../serve.sh 8080
 ```
 Open your browser at: **`http://localhost:8000/portfolio-rebalance/`**
 

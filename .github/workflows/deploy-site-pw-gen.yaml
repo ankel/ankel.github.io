@@ -30,4 +30,7 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./apps/pw-gen
           destination_dir: apps/pw-gen
+          exclude: |
+            **/*.test.js
+            **/tests/**
           commit_message: "deploy pw-gen from: ${{ github.event.head_commit.message }}"

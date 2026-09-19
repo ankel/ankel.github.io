@@ -1,18 +1,11 @@
 /**
- * Client-side Password Generator
- * Generates 10 cryptographically secure passwords matching user-defined criteria.
+ * Client-side Password Generator - UI Controller
  */
 
 (function () {
   'use strict';
 
-  // Character pool definitions
-  const CHARSETS = {
-    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    lower: 'abcdefghijklmnopqrstuvwxyz',
-    number: '0123456789',
-    special: '!@#$%^&*'
-  };
+  const { CHARSETS, generatePasswords, calculateEntropy } = window.PwGen;
 
   // DOM Elements
   const lengthSlider = document.getElementById('lengthSlider');
@@ -33,64 +26,6 @@
   const presetPills = document.querySelectorAll('.preset-pill');
 
   /**
-   * Generates a cryptographically secure random integer in [0, max)
-   * using rejection sampling to eliminate modulo bias.
-   */
-  function secureRandomInt(max) {
-    if (max <= 1) return 0;
-    const limit = Math.floor(0x100000000 / max) * max;
-    const array = new Uint32Array(1);
-    let rand;
-    do {
-      window.crypto.getRandomValues(array);
-      rand = array[0];
-    } while (rand >= limit);
-    return rand % max;
-  }
-
-  /**
-   * Fisher-Yates cryptographic shuffle
-   */
-  function secureShuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = secureRandomInt(i + 1);
-      const temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
-    }
-    return array;
-  }
-
-  /**
-   * Generates a single password of given length guaranteeing at least
-   * one character from each active charset (if length permits).
-   */
-  function generateSinglePassword(length, activeSets) {
-    if (activeSets.length === 0 || length <= 0) {
-      return '';
-    }
-
-    const chars = [];
-    let combinedPool = '';
-
-    // Guarantee at least one character from each selected charset
-    activeSets.forEach(setChars => {
-      combinedPool += setChars;
-      if (chars.length < length) {
-        chars.push(setChars[secureRandomInt(setChars.length)]);
-      }
-    });
-
-    // Fill remaining length from combined pool
-    while (chars.length < length) {
-      chars.push(combinedPool[secureRandomInt(combinedPool.length)]);
-    }
-
-    // Cryptographically shuffle to prevent predictable positions
-    return secureShuffle(chars).join('');
-  }
-
-  /**
    * Updates password strength & entropy display
    */
   function updateStrength(length, poolSize) {
@@ -103,7 +38,7 @@
       return;
     }
 
-    const entropy = Math.round(length * (Math.log2(poolSize) * 10)) / 10;
+    const entropy = calculateEntropy(length, poolSize);
     entropyBitsSpan.textContent = `~${entropy} bits`;
 
     let label = 'Weak';
@@ -142,18 +77,9 @@
   }
 
   /**
-   * Adjusts output textarea height dynamically so all lines fit without vertical scrollbars
-   */
-  function adjustTextareaHeight() {
-    if (!passwordOutput) return;
-    passwordOutput.style.height = 'auto';
-    passwordOutput.style.height = `${passwordOutput.scrollHeight + 2}px`;
-  }
-
-  /**
    * Generates 10 passwords and updates the UI
    */
-  function generatePasswords() {
+  function renderPasswords() {
     const length = parseInt(lengthSlider.value, 10) || 16;
     const activeSets = [];
     let poolSize = 0;
@@ -180,22 +106,16 @@
       passwordOutput.value = '';
       passwordOutput.placeholder = 'Please select at least one character set above.';
       updateStrength(0, 0);
-      adjustTextareaHeight();
       return;
     }
 
     if (warningBox) warningBox.classList.remove('active');
     passwordOutput.placeholder = '';
 
-    const passwords = [];
-    for (let i = 0; i < 10; i++) {
-      passwords.push(generateSinglePassword(length, activeSets));
-    }
-
+    const passwords = generatePasswords(10, length, activeSets);
     passwordOutput.value = passwords.join('\n');
     updateStrength(length, poolSize);
     updatePresetPills(length);
-    adjustTextareaHeight();
   }
 
   /**
@@ -212,7 +132,7 @@
 
     lengthSlider.value = val;
     lengthInput.value = val;
-    generatePasswords();
+    renderPasswords();
   }
 
   /**
@@ -285,7 +205,6 @@
 
   passwordOutput.addEventListener('paste', e => e.preventDefault());
   passwordOutput.addEventListener('cut', e => {
-    // Copy selection instead of cutting
     const selection = window.getSelection().toString() || 
       passwordOutput.value.substring(passwordOutput.selectionStart, passwordOutput.selectionEnd);
     if (selection && navigator.clipboard) {
@@ -311,7 +230,7 @@
 
   lengthSlider.addEventListener('input', function () {
     lengthInput.value = this.value;
-    generatePasswords();
+    renderPasswords();
   });
 
   lengthInput.addEventListener('input', function () {
@@ -327,12 +246,12 @@
       const len = parseInt(this.getAttribute('data-len'), 10);
       lengthSlider.value = len;
       lengthInput.value = len;
-      generatePasswords();
+      renderPasswords();
     });
   });
 
   [charsetUpper, charsetLower, charsetNumber, charsetSpecial].forEach(checkbox => {
-    checkbox.addEventListener('change', generatePasswords);
+    checkbox.addEventListener('change', renderPasswords);
   });
 
   if (copyBtn) {
@@ -346,12 +265,11 @@
       if (regenIcon) {
         regenIcon.style.transform = `rotate(${rotation}deg)`;
       }
-      generatePasswords();
+      renderPasswords();
       showToast('Generated 10 new passwords');
     });
   }
 
   // Initial generation on load
-  generatePasswords();
-  window.addEventListener('resize', adjustTextareaHeight);
+  renderPasswords();
 })();
