@@ -75,6 +75,7 @@ body {
   width: 100%;
   max-width: 580px;
   padding: 2.25rem 2rem;
+  margin: auto;
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.2s ease;
@@ -450,7 +451,9 @@ body {
 
 .password-output-box {
   width: 100%;
-  height: 252px;
+  height: auto;
+  min-height: calc(10 * 1.6em + 1.7rem + 4px);
+  field-sizing: content;
   padding: 0.85rem 1rem;
   font-family: var(--font-mono);
   font-size: 0.9375rem;
@@ -464,6 +467,7 @@ body {
   cursor: text;
   white-space: pre;
   overflow-x: auto;
+  overflow-y: hidden;
   user-select: text;
   -webkit-user-select: text;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
